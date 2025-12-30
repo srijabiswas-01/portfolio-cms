@@ -1,0 +1,153 @@
+{% extends 'public/base.html' %}
+
+{% block title %}Projects - Portfolio{% endblock %}
+
+{% block content %}
+<!-- Projects Header -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold font-poppins mb-4">
+                My <span class="text-accent-primary">Projects</span>
+            </h1>
+            <div class="w-20 h-1 bg-accent-primary rounded-full mx-auto mb-6"></div>
+            <p class="text-xl text-secondary max-w-2xl mx-auto">
+                Explore my portfolio of projects showcasing my skills in development and problem-solving
+            </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="max-w-2xl mx-auto mb-12">
+            <form method="GET" action="{% url 'projects' %}" class="relative">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query }}"
+                       placeholder="Search projects..."
+                       class="w-full bg-card border border-color rounded-lg px-6 py-4 text-primary placeholder-muted focus:outline-none focus:border-accent-primary transition-all">
+                <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-accent-primary hover:text-accent-secondary transition-colors">
+                    <i class="bi bi-search text-xl"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Projects Grid -->
+        {% if projects %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {% for project in projects %}
+            <div class="project-card group">
+                <!-- Project Image -->
+                <div class="relative overflow-hidden h-56 bg-card rounded-t-lg">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" 
+                         alt="{{ project.title }}" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+                        <i class="bi bi-folder text-7xl text-accent-primary/30"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Overlay on Hover -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                        <div class="flex gap-3">
+                            {% if project.github_link %}
+                            <a href="{{ project.github_link }}" target="_blank" 
+                               class="w-10 h-10 bg-white text-card rounded-lg flex items-center justify-center hover:bg-accent-primary hover:text-white transition-all">
+                                <i class="bi bi-github"></i>
+                            </a>
+                            {% endif %}
+                            {% if project.demo_link %}
+                            <a href="{{ project.demo_link }}" target="_blank" 
+                               class="w-10 h-10 bg-white text-card rounded-lg flex items-center justify-center hover:bg-accent-primary hover:text-white transition-all">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if project.is_featured %}
+                    <div class="absolute top-4 right-4">
+                        <span class="bg-accent-warning text-card px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                            <i class="bi bi-star-fill"></i>
+                            Featured
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Project Content -->
+                <div class="p-6">
+                    <h3 class="text-xl font-bold font-poppins mb-3 group-hover:text-accent-primary transition-colors line-clamp-1">
+                        {{ project.title }}
+                    </h3>
+
+                    <p class="text-secondary text-sm mb-4 line-clamp-3">
+                        {{ project.description }}
+                    </p>
+
+                    <!-- Tech Stack -->
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        {% for tech in project.tech_stack|slice:":4" %}
+                        <span class="tech-badge">{{ tech }}</span>
+                        {% endfor %}
+                        {% if project.tech_stack|length > 4 %}
+                        <span class="tech-badge">+{{ project.tech_stack|length|add:"-4" }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- View Details Button -->
+                    <a href="{% url 'project_detail' project.id %}" 
+                       class="btn-small-primary w-full text-center">
+                        View Details
+                        <i class="bi bi-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if projects.has_other_pages %}
+        <div class="flex justify-center items-center gap-2">
+            {% if projects.has_previous %}
+            <a href="?page={{ projects.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+               class="px-4 py-2 bg-card border border-color rounded-lg hover:border-accent-primary transition-colors">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 text-secondary">
+                Page {{ projects.number }} of {{ projects.paginator.num_pages }}
+            </span>
+
+            {% if projects.has_next %}
+            <a href="?page={{ projects.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+               class="px-4 py-2 bg-card border border-color rounded-lg hover:border-accent-primary transition-colors">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-20">
+            <i class="bi bi-folder-x text-8xl text-muted mb-6"></i>
+            <h3 class="text-2xl font-bold mb-2">No Projects Found</h3>
+            <p class="text-secondary mb-8">
+                {% if search_query %}
+                    No projects match your search "{{ search_query }}"
+                {% else %}
+                    No projects available at the moment
+                {% endif %}
+            </p>
+            {% if search_query %}
+            <a href="{% url 'projects' %}" class="btn-primary">
+                Clear Search
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

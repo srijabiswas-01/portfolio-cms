@@ -1,0 +1,180 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Admin Panel{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- Projects Card -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: rgba(92, 124, 250, 0.1);">
+            <i class="bi bi-folder" style="color: var(--admin-accent-primary);"></i>
+        </div>
+        <h3 style="font-size: 2rem; font-weight: 700; color: var(--admin-text-primary); margin-bottom: 0.25rem;">
+            {{ projects_count }}
+        </h3>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">Total Projects</p>
+        <a href="{% url 'admin_project_manager' %}" style="margin-top: 1rem; display: inline-flex; align-items: center; color: var(--admin-accent-primary); text-decoration: none; font-size: 0.875rem;">
+            View All <i class="bi bi-arrow-right ml-1"></i>
+        </a>
+    </div>
+    
+    <!-- Blogs Card -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: rgba(77, 171, 247, 0.1);">
+            <i class="bi bi-file-text" style="color: var(--admin-accent-secondary);"></i>
+        </div>
+        <h3 style="font-size: 2rem; font-weight: 700; color: var(--admin-text-primary); margin-bottom: 0.25rem;">
+            {{ blogs_count }}
+        </h3>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">Total Blogs</p>
+        <a href="{% url 'admin_blogs_list' %}" style="margin-top: 1rem; display: inline-flex; align-items: center; color: var(--admin-accent-secondary); text-decoration: none; font-size: 0.875rem;">
+            View All <i class="bi bi-arrow-right ml-1"></i>
+        </a>
+    </div>
+    
+    <!-- Published Blogs Card -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: rgba(81, 207, 102, 0.1);">
+            <i class="bi bi-check-circle" style="color: var(--admin-accent-success);"></i>
+        </div>
+        <h3 style="font-size: 2rem; font-weight: 700; color: var(--admin-text-primary); margin-bottom: 0.25rem;">
+            {{ published_blogs }}
+        </h3>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">Published Blogs</p>
+        <a href="{% url 'admin_blogs_list' %}?status=published" style="margin-top: 1rem; display: inline-flex; align-items: center; color: var(--admin-accent-success); text-decoration: none; font-size: 0.875rem;">
+            View All <i class="bi bi-arrow-right ml-1"></i>
+        </a>
+    </div>
+    
+    <!-- Draft Blogs Card -->
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon" style="background: rgba(255, 212, 59, 0.1);">
+            <i class="bi bi-pencil" style="color: var(--admin-accent-warning);"></i>
+        </div>
+        <h3 style="font-size: 2rem; font-weight: 700; color: var(--admin-text-primary); margin-bottom: 0.25rem;">
+            {{ draft_blogs }}
+        </h3>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">Draft Blogs</p>
+        <a href="{% url 'admin_blogs_list' %}?status=draft" style="margin-top: 1rem; display: inline-flex; align-items: center; color: var(--admin-accent-warning); text-decoration: none; font-size: 0.875rem;">
+            View All <i class="bi bi-arrow-right ml-1"></i>
+        </a>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="admin-card" style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+        Quick Actions
+    </h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <a href="{% url 'admin_blog_editor' %}" class="admin-btn-primary" style="justify-content: center;">
+            <i class="bi bi-plus-lg mr-2"></i>
+            New Blog Post
+        </a>
+        <a href="{% url 'admin_project_form' %}" class="admin-btn-secondary" style="justify-content: center;">
+            <i class="bi bi-plus-lg mr-2"></i>
+            New Project
+        </a>
+        <a href="{% url 'admin_skills_create' %}" class="admin-btn-secondary" style="justify-content: center;">
+            <i class="bi bi-plus-lg mr-2"></i>
+            Add Skill
+        </a>
+        <a href="{% url 'admin_profile_manager' %}" class="admin-btn-secondary" style="justify-content: center;">
+            <i class="bi bi-person mr-2"></i>
+            Edit Profile
+        </a>
+    </div>
+</div>
+
+<!-- Recent Content -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+    
+    <!-- Recent Projects -->
+    <div class="admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                Recent Projects
+            </h2>
+            <a href="{% url 'admin_project_manager' %}" style="color: var(--admin-accent-primary); text-decoration: none; font-size: 0.875rem;">
+                View All
+            </a>
+        </div>
+        
+        {% if recent_projects %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for project in recent_projects %}
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem;">
+                <div style="width: 60px; height: 60px; flex-shrink: 0; background: var(--admin-bg-primary); border-radius: 0.5rem; overflow: hidden;">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--admin-text-muted);">
+                        <i class="bi bi-folder"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <h3 style="font-weight: 500; color: var(--admin-text-primary); margin-bottom: 0.25rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ project.title }}
+                    </h3>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted);">
+                        {{ project.created_at|date:"M d, Y" }}
+                    </p>
+                </div>
+                <a href="{% url 'admin_project_edit' project.id %}" style="color: var(--admin-accent-primary); text-decoration: none;">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: var(--admin-text-muted); padding: 2rem;">No projects yet</p>
+        {% endif %}
+    </div>
+    
+    <!-- Recent Blogs -->
+    <div class="admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                Recent Blogs
+            </h2>
+            <a href="{% url 'admin_blogs_list' %}" style="color: var(--admin-accent-primary); text-decoration: none; font-size: 0.875rem;">
+                View All
+            </a>
+        </div>
+        
+        {% if recent_blogs %}
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for blog in recent_blogs %}
+            <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem;">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <h3 style="font-weight: 500; color: var(--admin-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ blog.title }}
+                        </h3>
+                        {% if blog.status == 'published' %}
+                        <span class="admin-badge admin-badge-success">Published</span>
+                        {% else %}
+                        <span class="admin-badge admin-badge-warning">Draft</span>
+                        {% endif %}
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted);">
+                        {{ blog.created_at|date:"M d, Y" }}
+                    </p>
+                </div>
+                <a href="{% url 'admin_blog_edit' blog.id %}" style="color: var(--admin-accent-primary); text-decoration: none;">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: var(--admin-text-muted); padding: 2rem;">No blogs yet</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

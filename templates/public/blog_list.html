@@ -1,0 +1,184 @@
+{% extends 'public/base.html' %}
+
+{% block title %}Blog - Portfolio{% endblock %}
+
+{% block content %}
+<!-- Blog Header -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold font-poppins mb-4">
+                My <span class="text-accent-primary">Blog</span>
+            </h1>
+            <div class="w-20 h-1 bg-accent-primary rounded-full mx-auto mb-6"></div>
+            <p class="text-xl text-secondary max-w-2xl mx-auto">
+                Thoughts, tutorials, and insights about technology, development, and more
+            </p>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="max-w-4xl mx-auto mb-12">
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Search -->
+                <form method="GET" class="flex-1 relative">
+                    <input type="text" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="Search articles..."
+                           class="w-full bg-card border border-color rounded-lg px-6 py-4 text-primary placeholder-muted focus:outline-none focus:border-accent-primary transition-all">
+                    <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-accent-primary hover:text-accent-secondary transition-colors">
+                        <i class="bi bi-search text-xl"></i>
+                    </button>
+                </form>
+
+                <!-- Tag Filter Dropdown -->
+                {% if all_tags %}
+                <div class="relative">
+                    <select onchange="if(this.value) window.location.href='?tag=' + this.value" 
+                            class="bg-card border border-color rounded-lg px-6 py-4 text-primary appearance-none cursor-pointer focus:outline-none focus:border-accent-primary transition-all pr-10">
+                        <option value="">All Topics</option>
+                        {% for tag in all_tags %}
+                        <option value="{{ tag }}" {% if tag == tag_filter %}selected{% endif %}>{{ tag }}</option>
+                        {% endfor %}
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-muted pointer-events-none"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Active Filters -->
+            {% if search_query or tag_filter %}
+            <div class="flex flex-wrap gap-2 mt-4">
+                {% if search_query %}
+                <span class="inline-flex items-center gap-2 bg-accent-primary/20 text-accent-primary px-3 py-1 rounded-lg text-sm">
+                    Search: "{{ search_query }}"
+                    <a href="{% url 'blogs' %}" class="hover:text-white">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </span>
+                {% endif %}
+                {% if tag_filter %}
+                <span class="inline-flex items-center gap-2 bg-accent-secondary/20 text-accent-secondary px-3 py-1 rounded-lg text-sm">
+                    Topic: {{ tag_filter }}
+                    <a href="{% url 'blogs' %}" class="hover:text-white">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Blog Grid -->
+        {% if blogs %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {% for blog in blogs %}
+            <article class="blog-card group">
+                <!-- Blog Cover -->
+                <div class="relative overflow-hidden h-56 bg-card rounded-t-lg">
+                    {% if blog.cover_image %}
+                    <img src="{{ blog.cover_image.url }}" 
+                         alt="{{ blog.title }}" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+                        <i class="bi bi-file-text text-7xl text-accent-primary/30"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-card to-transparent opacity-60"></div>
+                </div>
+
+                <!-- Blog Content -->
+                <div class="p-6">
+                    <!-- Meta Info -->
+                    <div class="flex items-center gap-4 text-sm text-muted mb-3">
+                        <span class="flex items-center gap-1">
+                            <i class="bi bi-calendar3"></i>
+                            {{ blog.published_date|date:"M d, Y" }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <i class="bi bi-clock"></i>
+                            {{ blog.read_time }} min read
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="text-xl font-bold font-poppins mb-3 group-hover:text-accent-primary transition-colors line-clamp-2">
+                        <a href="{% url 'blog_detail' blog.id %}">
+                            {{ blog.title }}
+                        </a>
+                    </h3>
+
+                    <!-- Preview -->
+                    <p class="text-secondary text-sm mb-4 line-clamp-3">
+                        {{ blog.preview }}
+                    </p>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% for tag in blog.tags|slice:":3" %}
+                        <a href="?tag={{ tag }}" class="tag-badge hover:bg-accent-secondary/20 transition-colors">
+                            {{ tag }}
+                        </a>
+                        {% endfor %}
+                        {% if blog.tags|length > 3 %}
+                        <span class="tag-badge">+{{ blog.tags|length|add:"-3" }}</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Read More Link -->
+                    <a href="{% url 'blog_detail' blog.id %}" 
+                       class="inline-flex items-center text-accent-primary font-medium hover:text-accent-secondary transition-colors group">
+                        Read More 
+                        <i class="bi bi-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if blogs.has_other_pages %}
+        <div class="flex justify-center items-center gap-2">
+            {% if blogs.has_previous %}
+            <a href="?page={{ blogs.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if tag_filter %}&tag={{ tag_filter }}{% endif %}" 
+               class="px-4 py-2 bg-card border border-color rounded-lg hover:border-accent-primary transition-colors">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 text-secondary">
+                Page {{ blogs.number }} of {{ blogs.paginator.num_pages }}
+            </span>
+
+            {% if blogs.has_next %}
+            <a href="?page={{ blogs.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if tag_filter %}&tag={{ tag_filter }}{% endif %}" 
+               class="px-4 py-2 bg-card border border-color rounded-lg hover:border-accent-primary transition-colors">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-20">
+            <i class="bi bi-file-earmark-x text-8xl text-muted mb-6"></i>
+            <h3 class="text-2xl font-bold mb-2">No Articles Found</h3>
+            <p class="text-secondary mb-8">
+                {% if search_query or tag_filter %}
+                    No articles match your criteria
+                {% else %}
+                    No articles published yet
+                {% endif %}
+            </p>
+            {% if search_query or tag_filter %}
+            <a href="{% url 'blogs' %}" class="btn-primary">
+                Clear Filters
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+# Windows
+nul
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Django
+db.sqlite3
+
+# Secrets
+.env
+
+# Static
+staticfiles/

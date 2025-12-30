@@ -1,0 +1,182 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Manage Blogs - Admin Panel{% endblock %}
+{% block page_title %}Manage Blogs{% endblock %}
+
+{% block content %}
+<!-- Header Actions -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+            All Blog Posts
+        </h2>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
+            Manage your blog content
+        </p>
+    </div>
+    <a href="{% url 'admin_blog_editor' %}" class="admin-btn-primary">
+        <i class="bi bi-plus-lg mr-2"></i>
+        New Blog Post
+    </a>
+</div>
+
+<!-- Filter Tabs -->
+<div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--admin-border-color);">
+    <a href="{% url 'admin_blogs_list' %}" 
+       style="padding: 0.75rem 1.5rem; text-decoration: none; color: {% if not request.GET.status %}var(--admin-accent-primary){% else %}var(--admin-text-secondary){% endif %}; border-bottom: 2px solid {% if not request.GET.status %}var(--admin-accent-primary){% else %}transparent{% endif %}; font-weight: 500;">
+        All ({{ blogs_count }})
+    </a>
+    <a href="?status=published" 
+       style="padding: 0.75rem 1.5rem; text-decoration: none; color: {% if request.GET.status == 'published' %}var(--admin-accent-primary){% else %}var(--admin-text-secondary){% endif %}; border-bottom: 2px solid {% if request.GET.status == 'published' %}var(--admin-accent-primary){% else %}transparent{% endif %}; font-weight: 500;">
+        Published ({{ published_blogs }})
+    </a>
+    <a href="?status=draft" 
+       style="padding: 0.75rem 1.5rem; text-decoration: none; color: {% if request.GET.status == 'draft' %}var(--admin-accent-primary){% else %}var(--admin-text-secondary){% endif %}; border-bottom: 2px solid {% if request.GET.status == 'draft' %}var(--admin-accent-primary){% else %}transparent{% endif %}; font-weight: 500;">
+        Drafts ({{ draft_blogs }})
+    </a>
+</div>
+
+<!-- Blogs Table -->
+{% if blogs %}
+<div class="admin-table">
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 50%;">Title</th>
+                <th>Status</th>
+                <th>Visibility</th>
+                <th>Published Date</th>
+                <th>Read Time</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for blog in blogs %}
+            <tr>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 60px; height: 60px; flex-shrink: 0; background: var(--admin-bg-primary); border-radius: 0.5rem; overflow: hidden;">
+                            {% if blog.cover_image %}
+                            <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--admin-text-muted);">
+                                <i class="bi bi-file-text text-xl"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div style="min-width: 0;">
+                            <h3 style="font-weight: 500; color: var(--admin-text-primary); margin-bottom: 0.25rem;">
+                                {{ blog.title }}
+                            </h3>
+                            <p style="font-size: 0.75rem; color: var(--admin-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ blog.preview|truncatewords:15 }}
+                            </p>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if blog.status == 'published' %}
+                    <span class="admin-badge admin-badge-success">Published</span>
+                    {% else %}
+                    <span class="admin-badge admin-badge-warning">Draft</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if blog.is_active %}
+                    <span class="admin-badge admin-badge-success">Active</span>
+                    {% else %}
+                    <span class="admin-badge admin-badge-warning">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="color: var(--admin-text-secondary);">
+                    {% if blog.published_date %}
+                        {{ blog.published_date|date:"M d, Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="color: var(--admin-text-secondary);">
+                    {{ blog.read_time }} min
+                </td>
+                <td>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        {% if blog.status == 'published' %}
+                        <a href="{% url 'blog_detail' blog.id %}" target="_blank" 
+                           class="admin-btn-secondary" 
+                           style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
+                           title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'admin_blog_edit' blog.id %}" 
+                           class="admin-btn-secondary" 
+                           style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
+                           title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button onclick="confirmDelete({{ blog.id }}, '{{ blog.title|escapejs }}')" 
+                                class="admin-btn-danger" 
+                                style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
+                                title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="admin-card" style="text-align: center; padding: 4rem 2rem;">
+    <i class="bi bi-file-text" style="font-size: 4rem; color: var(--admin-text-muted); margin-bottom: 1rem;"></i>
+    <h3 style="font-weight: 600; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+        No blogs found
+    </h3>
+    <p style="color: var(--admin-text-muted); margin-bottom: 1.5rem;">
+        Start by creating your first blog post
+    </p>
+    <a href="{% url 'admin_blog_editor' %}" class="admin-btn-primary">
+        <i class="bi bi-plus-lg mr-2"></i>
+        Create Blog Post
+    </a>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
+        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Delete Blog Post
+        </h3>
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
+            Are you sure you want to delete "<span id="deleteBlogTitle"></span>"? This action cannot be undone.
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                Cancel
+            </button>
+            <form id="deleteForm" method="POST" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(blogId, blogTitle) {
+        document.getElementById('deleteBlogTitle').textContent = blogTitle;
+        document.getElementById('deleteForm').action = `/admin/blogs/${blogId}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

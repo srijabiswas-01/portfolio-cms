@@ -1,0 +1,126 @@
+<!-- templates/public/base.html -->
+ {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portfolio{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/base-public.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-primary text-primary font-inter">
+    
+    <!-- Navigation -->
+    <nav class="fixed w-full top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-color shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <a href="{% url 'home' %}" class="text-2xl font-bold font-poppins">
+                    <span class="text-accent-primary">SB</span>
+                    <span class="text-white">.Portfolio</span>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8">
+                    <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+                    <a href="{% url 'about' %}" class="nav-link {% if 'about' in request.path %}active{% endif %}">About</a>
+                    <a href="{% url 'skills' %}" class="nav-link {% if 'skills' in request.path %}active{% endif %}">Skills</a>
+                    <a href="{% url 'projects' %}" class="nav-link {% if 'projects' in request.path %}active{% endif %}">Projects</a>
+                    <a href="{% url 'blogs' %}" class="nav-link {% if 'blog' in request.path %}active{% endif %}">Blog</a>
+                    <a href="{% url 'contact' %}" class="nav-link {% if 'contact' in request.path %}active{% endif %}">Contact</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-white text-2xl">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4">
+                <div class="flex flex-col space-y-3">
+                    <a href="{% url 'home' %}" class="mobile-nav-link">Home</a>
+                    <a href="{% url 'about' %}" class="mobile-nav-link">About</a>
+                    <a href="{% url 'skills' %}" class="mobile-nav-link">Skills</a>
+                    <a href="{% url 'projects' %}" class="mobile-nav-link">Projects</a>
+                    <a href="{% url 'blogs' %}" class="mobile-nav-link">Blog</a>
+                    <a href="{% url 'contact' %}" class="mobile-nav-link">Contact</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-20">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-secondary border-t border-color mt-20">
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- About Section -->
+                <div>
+                    <h3 class="text-xl font-bold font-poppins mb-4">SB.Portfolio</h3>
+                    <p class="text-secondary text-sm">
+                        MCA Student passionate about Data Science, AI/ML, and Web Development.
+                    </p>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-lg font-semibold font-poppins mb-4">Quick Links</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{% url 'projects' %}" class="text-secondary hover:text-accent-primary transition">Projects</a></li>
+                        <li><a href="{% url 'blogs' %}" class="text-secondary hover:text-accent-primary transition">Blog</a></li>
+                        <li><a href="{% url 'skills' %}" class="text-secondary hover:text-accent-primary transition">Skills</a></li>
+                        <li><a href="{% url 'contact' %}" class="text-secondary hover:text-accent-primary transition">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Social Links -->
+                <div>
+                    <h3 class="text-lg font-semibold font-poppins mb-4">Connect</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="social-icon"><i class="bi bi-github"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-envelope"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-color mt-8 pt-8 text-center text-sm text-muted">
+                <p>&copy; 2024 NS Portfolio. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

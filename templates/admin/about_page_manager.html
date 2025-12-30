@@ -1,0 +1,620 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}About Page Manager - Admin Panel{% endblock %}
+{% block page_title %}About Page Content{% endblock %}
+
+{% block content %}
+<div style="max-width: 1400px;">
+    
+    <!-- Main Content Form -->
+    <form method="POST" id="aboutPageForm">
+        {% csrf_token %}
+        
+        <!-- Page Header -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-person-fill text-primary mr-2"></i>
+                Page Header
+            </h2>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="page_title">Page Title</label>
+                <input type="text" 
+                       id="page_title" 
+                       name="page_title" 
+                       class="admin-form-input"
+                       value="{{ about_page.page_title }}"
+                       placeholder="About Me">
+            </div>
+        </div>
+        
+        <!-- Introduction Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-file-text-fill text-info mr-2"></i>
+                Introduction Content
+            </h2>
+            
+            <label class="admin-form-label">Introduction (Rich Text)</label>
+            <div id="quill-introduction" style="min-height: 300px;">
+                {{ about_page.introduction|safe }}
+            </div>
+            <input type="hidden" id="introduction" name="introduction">
+        </div>
+        
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-eye-fill text-warning mr-2"></i>
+                Visibility Controls
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Page Title</label>
+                    <input type="checkbox"
+                           name="show_page_title"
+                           {% if about_page.show_page_title %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Introduction</label>
+                    <input type="checkbox"
+                           name="show_introduction"
+                           {% if about_page.show_introduction %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Stats Section</label>
+                    <input type="checkbox"
+                           name="show_stats_section"
+                           {% if about_page.show_stats_section %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Education Section Settings -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-mortarboard-fill text-warning mr-2"></i>
+                Education Section
+            </h2>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                <input type="checkbox" 
+                       id="show_education" 
+                       name="show_education" 
+                       {% if about_page.show_education %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                <label for="show_education" style="color: var(--admin-text-primary); cursor: pointer;">
+                    Show Education Section
+                </label>
+            </div>
+        </div>
+        
+        <!-- Interests Section Settings -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-lightbulb-fill text-success mr-2"></i>
+                Interests Section
+            </h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="interests_title">Section Title</label>
+                    <input type="text" 
+                           id="interests_title" 
+                           name="interests_title" 
+                           class="admin-form-input"
+                           value="{{ about_page.interests_title }}">
+                </div>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="interests_subtitle">Section Subtitle</label>
+                    <input type="text" 
+                           id="interests_subtitle" 
+                           name="interests_subtitle" 
+                           class="admin-form-input"
+                           value="{{ about_page.interests_subtitle }}">
+                </div>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Show Interests Section</label>
+                <input type="checkbox"
+                       name="show_interests"
+                       {% if about_page.show_interests %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+            </div>
+        </div>
+        
+        <!-- Values Section Settings -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-heart-fill text-danger mr-2"></i>
+                Core Values Section
+            </h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="values_title">Section Title</label>
+                    <input type="text" 
+                           id="values_title" 
+                           name="values_title" 
+                           class="admin-form-input"
+                           value="{{ about_page.values_title }}">
+                </div>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="values_subtitle">Section Subtitle</label>
+                    <input type="text" 
+                           id="values_subtitle" 
+                           name="values_subtitle" 
+                           class="admin-form-input"
+                           value="{{ about_page.values_subtitle }}">
+                </div>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Show Values Section</label>
+                <input type="checkbox"
+                       name="show_values"
+                       {% if about_page.show_values %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-bottom: 2rem;">
+            <a href="{% url 'admin_dashboard' %}" class="admin-btn-secondary">
+                Cancel
+            </a>
+            <button type="submit" class="admin-btn-success">
+                <i class="bi bi-check-lg mr-2"></i>
+                Save Page Content
+            </button>
+        </div>
+    </form>
+    
+    <!-- Manage Education Entries -->
+    <div class="admin-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                <i class="bi bi-mortarboard mr-2"></i>
+                Education Entries
+            </h2>
+            <button onclick="openEducationModal()" class="admin-btn-primary">
+                <i class="bi bi-plus-lg mr-2"></i>
+                Add Education
+            </button>
+        </div>
+        
+        {% if education_list %}
+        <div class="admin-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Degree</th>
+                        <th>Institution</th>
+                        <th>Year</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for edu in education_list %}
+                    <tr>
+                        <td>{{ edu.order }}</td>
+                        <td>
+                            <strong>{{ edu.degree }}</strong>
+                            <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.25rem;">{{ edu.description|truncatewords:15 }}</p>
+                        </td>
+                        <td>{{ edu.institution }}</td>
+                        <td>{{ edu.year }}</td>
+                        <td>
+                            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                                <button onclick="editEducation({{ edu.id }}, '{{ edu.degree|escapejs }}', '{{ edu.institution|escapejs }}', '{{ edu.year }}', '{{ edu.description|escapejs }}', {{ edu.order }})" 
+                                        class="admin-btn-secondary" 
+                                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button onclick="deleteEducation({{ edu.id }}, '{{ edu.degree|escapejs }}')" 
+                                        class="admin-btn-danger" 
+                                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
+            <i class="bi bi-mortarboard" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <p>No education entries yet. Click "Add Education" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Manage Interests -->
+    <div class="admin-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                <i class="bi bi-lightbulb mr-2"></i>
+                Interests
+            </h2>
+            <button onclick="openInterestModal()" class="admin-btn-primary">
+                <i class="bi bi-plus-lg mr-2"></i>
+                Add Interest
+            </button>
+        </div>
+        
+        {% if interests_list %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+            {% for interest in interests_list %}
+            <div style="background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; padding: 1.5rem; text-align: center;">
+                <i class="bi bi-{{ interest.icon }}" style="font-size: 2.5rem; color: var(--admin-accent-{{ interest.color }}); margin-bottom: 1rem;"></i>
+                <h3 style="font-weight: 600; margin-bottom: 0.5rem;">{{ interest.title }}</h3>
+                <p style="font-size: 0.875rem; color: var(--admin-text-muted); margin-bottom: 1rem;">{{ interest.description }}</p>
+                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                    <button onclick="editInterest({{ interest.id }}, '{{ interest.title|escapejs }}', '{{ interest.description|escapejs }}', '{{ interest.icon }}', '{{ interest.color }}', {{ interest.order }})" 
+                            class="admin-btn-secondary" 
+                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button onclick="deleteInterest({{ interest.id }}, '{{ interest.title|escapejs }}')" 
+                            class="admin-btn-danger" 
+                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
+            <i class="bi bi-lightbulb" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <p>No interests yet. Click "Add Interest" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Manage Core Values -->
+    <div class="admin-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                <i class="bi bi-heart mr-2"></i>
+                Core Values
+            </h2>
+            <button onclick="openValueModal()" class="admin-btn-primary">
+                <i class="bi bi-plus-lg mr-2"></i>
+                Add Value
+            </button>
+        </div>
+        
+        {% if values_list %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
+            {% for value in values_list %}
+            <div style="background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; padding: 1.5rem; text-align: center;">
+                <div style="width: 60px; height: 60px; background: rgba(92, 124, 250, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                    <i class="bi bi-{{ value.icon }}" style="font-size: 1.75rem; color: var(--admin-accent-{{ value.color }});"></i>
+                </div>
+                <h3 style="font-weight: 600; margin-bottom: 0.5rem;">{{ value.title }}</h3>
+                <p style="font-size: 0.875rem; color: var(--admin-text-muted); margin-bottom: 1rem;">{{ value.description|truncatewords:20 }}</p>
+                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                    <button onclick="editValue({{ value.id }}, '{{ value.title|escapejs }}', '{{ value.description|escapejs }}', '{{ value.icon }}', '{{ value.color }}', {{ value.order }})" 
+                            class="admin-btn-secondary" 
+                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button onclick="deleteValue({{ value.id }}, '{{ value.title|escapejs }}')" 
+                            class="admin-btn-danger" 
+                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
+            <i class="bi bi-heart" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <p>No core values yet. Click "Add Value" to create one.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Education Modal -->
+<div id="educationModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center; overflow-y: auto;">
+    <div class="admin-card" style="max-width: 600px; margin: 2rem; width: 100%;">
+        <h3 id="educationModalTitle" style="font-weight: 600; margin-bottom: 1.5rem; color: var(--admin-text-primary);">
+            Add Education Entry
+        </h3>
+        
+        <form id="educationForm" method="POST">
+            {% csrf_token %}
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Degree</label>
+                <input type="text" name="degree" id="edu_degree" class="admin-form-input" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Institution</label>
+                <input type="text" name="institution" id="edu_institution" class="admin-form-input" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Year</label>
+                <input type="text" name="year" id="edu_year" class="admin-form-input" placeholder="2023 - 2025" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <textarea name="description" id="edu_description" class="admin-form-textarea" rows="3" required></textarea>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Order (for sorting)</label>
+                <input type="number" name="order" id="edu_order" class="admin-form-input" value="0">
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeEducationModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                    Cancel
+                </button>
+                <button type="submit" class="admin-btn-success" style="flex: 1; justify-content: center;">
+                    <i class="bi bi-check-lg mr-2"></i>
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Interest Modal -->
+<div id="interestModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 500px; margin: 2rem; width: 100%;">
+        <h3 id="interestModalTitle" style="font-weight: 600; margin-bottom: 1.5rem; color: var(--admin-text-primary);">
+            Add Interest
+        </h3>
+        
+        <form id="interestForm" method="POST">
+            {% csrf_token %}
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Title</label>
+                <input type="text" name="title" id="int_title" class="admin-form-input" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <input type="text" name="description" id="int_description" class="admin-form-input" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Bootstrap Icon Name</label>
+                <input type="text" name="icon" id="int_icon" class="admin-form-input" placeholder="graph-up" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Color</label>
+                <select name="color" id="int_color" class="admin-form-select">
+                    <option value="primary">Primary (Cyan)</option>
+                    <option value="secondary">Secondary (Purple)</option>
+                    <option value="success">Success (Green)</option>
+                    <option value="warning">Warning (Yellow)</option>
+                    <option value="error">Error (Red)</option>
+                </select>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Order</label>
+                <input type="number" name="order" id="int_order" class="admin-form-input" value="0">
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeInterestModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                    Cancel
+                </button>
+                <button type="submit" class="admin-btn-success" style="flex: 1; justify-content: center;">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Value Modal -->
+<div id="valueModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 500px; margin: 2rem; width: 100%;">
+        <h3 id="valueModalTitle" style="font-weight: 600; margin-bottom: 1.5rem; color: var(--admin-text-primary);">
+            Add Core Value
+        </h3>
+        
+        <form id="valueForm" method="POST">
+            {% csrf_token %}
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Title</label>
+                <input type="text" name="title" id="val_title" class="admin-form-input" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <textarea name="description" id="val_description" class="admin-form-textarea" rows="3" required></textarea>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Bootstrap Icon Name</label>
+                <input type="text" name="icon" id="val_icon" class="admin-form-input" placeholder="trophy" required>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Color</label>
+                <select name="color" id="val_color" class="admin-form-select">
+                    <option value="primary">Primary (Cyan)</option>
+                    <option value="secondary">Secondary (Purple)</option>
+                    <option value="success">Success (Green)</option>
+                    <option value="warning">Warning (Yellow)</option>
+                    <option value="error">Error (Red)</option>
+                </select>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Order</label>
+                <input type="number" name="order" id="val_order" class="admin-form-input" value="0">
+            </div>
+            
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeValueModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                    Cancel
+                </button>
+                <button type="submit" class="admin-btn-success" style="flex: 1; justify-content: center;">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modals -->
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
+        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Confirm Delete
+        </h3>
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
+            Are you sure you want to delete "<span id="deleteItemName"></span>"?
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                Cancel
+            </button>
+            <form id="deleteForm" method="POST" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Quill Editor
+    var quillIntro = new Quill('#quill-introduction', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Write your introduction...'
+    });
+    
+    // Form submission
+    document.getElementById('aboutPageForm').addEventListener('submit', function(e) {
+        document.getElementById('introduction').value = quillIntro.root.innerHTML;
+    });
+    
+    // Education Modal Functions
+    function openEducationModal() {
+        document.getElementById('educationModalTitle').textContent = 'Add Education Entry';
+        document.getElementById('educationForm').reset();
+        document.getElementById('educationForm').action = '{% url "admin_education_create" %}';
+        document.getElementById('educationModal').style.display = 'flex';
+    }
+    
+    function editEducation(id, degree, institution, year, description, order) {
+        document.getElementById('educationModalTitle').textContent = 'Edit Education Entry';
+        document.getElementById('edu_degree').value = degree;
+        document.getElementById('edu_institution').value = institution;
+        document.getElementById('edu_year').value = year;
+        document.getElementById('edu_description').value = description;
+        document.getElementById('edu_order').value = order;
+        document.getElementById('educationForm').action = `/admin/pages/about/education/${id}/edit/`;
+        document.getElementById('educationModal').style.display = 'flex';
+    }
+    
+    function closeEducationModal() {
+        document.getElementById('educationModal').style.display = 'none';
+    }
+    
+    function deleteEducation(id, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = `/admin/pages/about/education/${id}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    // Interest Modal Functions
+    function openInterestModal() {
+        document.getElementById('interestModalTitle').textContent = 'Add Interest';
+        document.getElementById('interestForm').reset();
+        document.getElementById('interestForm').action = '{% url "admin_interest_create" %}';
+        document.getElementById('interestModal').style.display = 'flex';
+    }
+    
+    function editInterest(id, title, description, icon, color, order) {
+        document.getElementById('interestModalTitle').textContent = 'Edit Interest';
+        document.getElementById('int_title').value = title;
+        document.getElementById('int_description').value = description;
+        document.getElementById('int_icon').value = icon;
+        document.getElementById('int_color').value = color;
+        document.getElementById('int_order').value = order;
+        document.getElementById('interestForm').action = `/admin/pages/about/interests/${id}/edit/`;
+        document.getElementById('interestModal').style.display = 'flex';
+    }
+    
+    function closeInterestModal() {
+        document.getElementById('interestModal').style.display = 'none';
+    }
+    
+    function deleteInterest(id, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = `/admin/pages/about/interests/${id}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    // Value Modal Functions
+    function openValueModal() {
+        document.getElementById('valueModalTitle').textContent = 'Add Core Value';
+        document.getElementById('valueForm').reset();
+        document.getElementById('valueForm').action = '{% url "admin_value_create" %}';
+        document.getElementById('valueModal').style.display = 'flex';
+    }
+    
+    function editValue(id, title, description, icon, color, order) {
+        document.getElementById('valueModalTitle').textContent = 'Edit Core Value';
+        document.getElementById('val_title').value = title;
+        document.getElementById('val_description').value = description;
+        document.getElementById('val_icon').value = icon;
+        document.getElementById('val_color').value = color;
+        document.getElementById('val_order').value = order;
+        document.getElementById('valueForm').action = `/admin/pages/about/values/${id}/edit/`;
+        document.getElementById('valueModal').style.display = 'flex';
+    }
+    
+    function closeValueModal() {
+        document.getElementById('valueModal').style.display = 'none';
+    }
+    
+    function deleteValue(id, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = `/admin/pages/about/values/${id}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

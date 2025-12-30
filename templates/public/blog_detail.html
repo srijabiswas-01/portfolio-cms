@@ -1,0 +1,221 @@
+{% extends 'public/base.html' %}
+
+{% block title %}{{ blog.title }} - Blog{% endblock %}
+
+{% block content %}
+<!-- Blog Article -->
+<article class="py-20">
+    <div class="container mx-auto px-4">
+        <!-- Back Button -->
+        <div class="mb-8">
+            <a href="{% url 'blogs' %}" class="inline-flex items-center text-accent-primary hover:text-accent-secondary transition-colors">
+                <i class="bi bi-arrow-left mr-2"></i>
+                Back to Blog
+            </a>
+        </div>
+
+        <!-- Article Header -->
+        <div class="max-w-4xl mx-auto mb-12">
+            <!-- Meta Info -->
+            <div class="flex items-center gap-4 text-sm text-muted mb-6">
+                <span class="flex items-center gap-1">
+                    <i class="bi bi-calendar3"></i>
+                    {{ blog.published_date|date:"F d, Y" }}
+                </span>
+                <span class="flex items-center gap-1">
+                    <i class="bi bi-clock"></i>
+                    {{ blog.read_time }} min read
+                </span>
+                <span class="flex items-center gap-1">
+                    <i class="bi bi-person"></i>
+                    {{ blog.author.username }}
+                </span>
+            </div>
+
+            <!-- Title -->
+            <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-6 leading-tight">
+                {{ blog.title }}
+            </h1>
+
+            <!-- Tags -->
+            <div class="flex flex-wrap gap-2 mb-8">
+                {% for tag in blog.tags %}
+                <a href="{% url 'blogs' %}?tag={{ tag }}" class="tag-badge hover:bg-accent-secondary/20 transition-colors">
+                    {{ tag }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Cover Image -->
+            {% if blog.cover_image %}
+            <div class="rounded-2xl overflow-hidden border border-color mb-12">
+                <img src="{{ blog.cover_image.url }}" 
+                     alt="{{ blog.title }}" 
+                     class="w-full h-auto">
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Article Content -->
+        <div class="max-w-4xl mx-auto">
+            <div class="prose prose-invert prose-lg max-w-none mb-12">
+                <div class="blog-content text-secondary leading-relaxed">
+                    {{ blog.content|safe }}
+                </div>
+            </div>
+
+            <!-- Share Section -->
+            <div class="border-t border-color pt-8 mb-12">
+                <h3 class="text-lg font-semibold mb-4">Share this article</h3>
+                <div class="flex gap-3">
+                    <a href="https://twitter.com/intent/tweet?text={{ blog.title }}&url={{ request.build_absolute_uri }}" 
+                       target="_blank"
+                       class="social-icon hover:bg-[#1DA1F2]">
+                        <i class="bi bi-twitter"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.build_absolute_uri }}" 
+                       target="_blank"
+                       class="social-icon hover:bg-[#0A66C2]">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" 
+                       target="_blank"
+                       class="social-icon hover:bg-[#1877F2]">
+                        <i class="bi bi-facebook"></i>
+                    </a>
+                    <button onclick="copyToClipboard('{{ request.build_absolute_uri }}')" 
+                            class="social-icon hover:bg-accent-primary"
+                            title="Copy link">
+                        <i class="bi bi-link-45deg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Articles -->
+        {% if related_blogs %}
+        <div class="max-w-6xl mx-auto mt-20">
+            <h2 class="text-3xl font-bold font-poppins mb-8">Related Articles</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                {% for related in related_blogs %}
+                <article class="blog-card group">
+                    <div class="relative overflow-hidden h-48 bg-card rounded-t-lg">
+                        {% if related.cover_image %}
+                        <img src="{{ related.cover_image.url }}" 
+                             alt="{{ related.title }}" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+                            <i class="bi bi-file-text text-6xl text-accent-primary/30"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="flex items-center gap-3 text-sm text-muted mb-3">
+                            <span><i class="bi bi-calendar3 mr-1"></i>{{ related.published_date|date:"M d, Y" }}</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 line-clamp-2 group-hover:text-accent-primary transition-colors">
+                            {{ related.title }}
+                        </h3>
+                        <p class="text-secondary text-sm mb-4 line-clamp-2">{{ related.preview }}</p>
+                        <a href="{% url 'blog_detail' related.id %}" class="text-accent-primary hover:text-accent-secondary font-medium">
+                            Read More <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</article>
+
+<style>
+    /* Blog Content Styling */
+    .blog-content h1,
+    .blog-content h2,
+    .blog-content h3,
+    .blog-content h4,
+    .blog-content h5,
+    .blog-content h6 {
+        color: var(--text-primary);
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .blog-content h1 { font-size: 2rem; }
+    .blog-content h2 { font-size: 1.75rem; }
+    .blog-content h3 { font-size: 1.5rem; }
+
+    .blog-content p {
+        margin-bottom: 1.5rem;
+        line-height: 1.8;
+    }
+
+    .blog-content a {
+        color: var(--accent-primary);
+        text-decoration: underline;
+    }
+
+    .blog-content a:hover {
+        color: var(--accent-secondary);
+    }
+
+    .blog-content ul,
+    .blog-content ol {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .blog-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .blog-content code {
+        background: var(--bg-card);
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.25rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.9em;
+        color: var(--accent-primary);
+    }
+
+    .blog-content pre {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+    }
+
+    .blog-content pre code {
+        background: none;
+        padding: 0;
+    }
+
+    .blog-content blockquote {
+        border-left: 4px solid var(--accent-primary);
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: var(--text-secondary);
+    }
+
+    .blog-content img {
+        border-radius: 0.5rem;
+        margin: 2rem 0;
+    }
+</style>
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+</script>
+{% endblock %}

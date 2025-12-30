@@ -1,0 +1,311 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if blog %}Edit Blog{% else %}New Blog{% endif %} - Admin Panel{% endblock %}
+{% block page_title %}{% if blog %}Edit Blog{% else %}Create New Blog{% endif %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px;">
+    <!-- Back Button -->
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'admin_blogs_list' %}" class="admin-btn-secondary">
+            <i class="bi bi-arrow-left mr-2"></i>
+            Back to Blogs
+        </a>
+    </div>
+    
+    <!-- Blog Editor Form -->
+    <form method="POST" enctype="multipart/form-data" id="blogForm">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 1.5rem;">
+            
+            <!-- Main Content -->
+            <div>
+                <!-- Title -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label" for="title">Blog Title *</label>
+                    <input type="text" 
+                           id="title" 
+                           name="title" 
+                           class="admin-form-input"
+                           value="{{ blog.title|default:'' }}"
+                           placeholder="Enter an engaging title for your blog post"
+                           required
+                           style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif;">
+                </div>
+                
+                <!-- Cover Image -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label">Cover Image</label>
+                    
+                    <!-- Image Preview -->
+                    <div id="imagePreview" style="margin-bottom: 1rem; {% if not blog.cover_image %}display: none;{% endif %}">
+                        <img id="previewImg" 
+                             src="{% if blog.cover_image %}{{ blog.cover_image.url }}{% endif %}" 
+                             style="width: 100%; height: 300px; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--admin-border-color);">
+                    </div>
+                    
+                    <!-- File Input -->
+                    <div style="display: flex; gap: 1rem;">
+                        <label for="cover_image" class="admin-btn-secondary" style="cursor: pointer; margin: 0;">
+                            <i class="bi bi-image mr-2"></i>
+                            Choose Image
+                        </label>
+                        <input type="file" 
+                               id="cover_image" 
+                               name="cover_image" 
+                               accept="image/*"
+                               style="display: none;"
+                               onchange="previewImage(event)">
+                        
+                        {% if blog.cover_image %}
+                        <button type="button" onclick="removeImage()" class="admin-btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                        Recommended size: 1200x630px. Max file size: 5MB
+                    </p>
+                </div>
+                
+                <!-- Content Editor with QuillJS -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label">Content *</label>
+                    
+                    <!-- Quill Editor -->
+                    <div id="quill-editor" style="min-height: 500px;">
+                        {{ blog.content|default:""|safe }}
+                    </div>
+                    
+                    <!-- Hidden input to store content -->
+                    <input type="hidden" id="content" name="content" required>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div>
+                <!-- Publish Settings -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+                        Publish Settings
+                    </h3>
+                    
+                    <!-- Status -->
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="status">Status</label>
+                        <select id="status" name="status" class="admin-form-select">
+                            <option value="draft" {% if blog.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="published" {% if blog.status == 'published' %}selected{% endif %}>Published</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem; gap: 0.5rem;">
+                        <input type="checkbox"
+                               id="blog_active"
+                               name="is_active"
+                               {% if blog %}{% if blog.is_active %}checked{% endif %}{% else %}checked{% endif %}
+                               style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                        <label for="blog_active" style="margin: 0; cursor: pointer; color: var(--admin-text-primary);">
+                            Make blog post visible on the public site
+                        </label>
+                    </div>
+                    
+                    <!-- Read Time -->
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="read_time">Read Time (minutes)</label>
+                        <input type="number" 
+                               id="read_time" 
+                               name="read_time" 
+                               class="admin-form-input"
+                               value="{{ blog.read_time|default:5 }}"
+                               min="1"
+                               max="60">
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem;">
+                        <button type="submit" name="action" value="publish" class="admin-btn-success" style="justify-content: center;">
+                            <i class="bi bi-check-lg mr-2"></i>
+                            {% if blog %}Update{% else %}Publish{% endif %} Blog
+                        </button>
+                        
+                        <button type="submit" name="action" value="draft" class="admin-btn-secondary" style="justify-content: center;">
+                            <i class="bi bi-save mr-2"></i>
+                            Save as Draft
+                        </button>
+                        
+                        {% if blog %}
+                        <button type="button" onclick="deleteBlog()" class="admin-btn-danger" style="justify-content: center;">
+                            <i class="bi bi-trash mr-2"></i>
+                            Delete Blog
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Preview Text -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label" for="preview">Preview Text</label>
+                    <textarea id="preview" 
+                              name="preview" 
+                              class="admin-form-textarea"
+                              rows="4"
+                              placeholder="Short description for blog preview (300 characters max)"
+                              maxlength="300">{{ blog.preview|default:'' }}</textarea>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                        <span id="previewCount">{{ blog.preview|length|default:0 }}</span>/300 characters
+                    </p>
+                </div>
+                
+                <!-- Tags -->
+                <div class="admin-card">
+                    <label class="admin-form-label" for="tags">Tags</label>
+                    <input type="text" 
+                           id="tags" 
+                           name="tags" 
+                           class="admin-form-input"
+                           value="{% if blog.tags %}{{ blog.tags|join:', ' }}{% endif %}"
+                           placeholder="e.g., Python, Django, AI">
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                        Separate tags with commas
+                    </p>
+                    
+                    <!-- Tag Preview -->
+                    <div id="tagPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if blog %}
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
+        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Confirm Delete
+        </h3>
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
+            Are you sure you want to delete this blog post? This action cannot be undone.
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                Cancel
+            </button>
+            <form method="POST" action="{% url 'admin_blog_delete' blog.id %}" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Quill Editor
+    var quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'font': [] }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                ['blockquote', 'code-block'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'align': [] }],
+                ['link', 'image', 'video'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Start writing your blog content here...'
+    });
+    
+    // Form submission - save Quill content
+    document.getElementById('blogForm').addEventListener('submit', function(e) {
+        // Get Quill content
+        var content = quill.root.innerHTML;
+        document.getElementById('content').value = content;
+        
+        // Validate content
+        if (quill.getText().trim().length === 0) {
+            e.preventDefault();
+            alert('Please add some content to your blog post');
+            return false;
+        }
+    });
+    
+    // Image Preview
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function removeImage() {
+        document.getElementById('cover_image').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+    
+    // Preview character count
+    const previewTextarea = document.getElementById('preview');
+    const previewCount = document.getElementById('previewCount');
+    
+    previewTextarea.addEventListener('input', function() {
+        previewCount.textContent = this.value.length;
+    });
+    
+    // Tag preview
+    const tagsInput = document.getElementById('tags');
+    const tagPreview = document.getElementById('tagPreview');
+    
+    function updateTagPreview() {
+        const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        tagPreview.innerHTML = tags.map(tag => 
+            `<span class="admin-badge admin-badge-info">${tag}</span>`
+        ).join('');
+    }
+    
+    tagsInput.addEventListener('input', updateTagPreview);
+    updateTagPreview(); // Initial load
+    
+    // Delete Modal
+    function deleteBlog() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+    
+    // Auto-save draft every 2 minutes
+    setInterval(function() {
+        const status = document.getElementById('status').value;
+        if (status === 'draft') {
+            // Get form data
+            const content = quill.root.innerHTML;
+            document.getElementById('content').value = content;
+            
+            // You can implement AJAX save here
+            console.log('Auto-saving draft...');
+        }
+    }, 120000); // 2 minutes
+</script>
+{% endblock %}

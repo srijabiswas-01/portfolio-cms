@@ -1,0 +1,176 @@
+{% extends 'public/base.html' %}
+
+{% block title %}{{ project.title }} - Portfolio{% endblock %}
+
+{% block content %}
+<!-- Project Hero -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <!-- Back Button -->
+        <div class="mb-8">
+            <a href="{% url 'projects' %}" class="inline-flex items-center text-accent-primary hover:text-accent-secondary transition-colors">
+                <i class="bi bi-arrow-left mr-2"></i>
+                Back to Projects
+            </a>
+        </div>
+
+        <!-- Project Header -->
+        <div class="mb-12">
+            <div class="flex items-start justify-between mb-6">
+                <div class="flex-1">
+                    <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-4">
+                        {{ project.title }}
+                    </h1>
+                    {% if project.is_featured %}
+                    <span class="inline-flex items-center gap-2 bg-accent-warning/20 text-accent-warning px-4 py-2 rounded-lg border border-accent-warning/30">
+                        <i class="bi bi-star-fill"></i>
+                        Featured Project
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4">
+                {% if project.github_link %}
+                <a href="{{ project.github_link }}" target="_blank" class="btn-primary">
+                    <i class="bi bi-github mr-2"></i>
+                    View on GitHub
+                </a>
+                {% endif %}
+                {% if project.demo_link %}
+                <a href="{{ project.demo_link }}" target="_blank" class="btn-secondary">
+                    <i class="bi bi-box-arrow-up-right mr-2"></i>
+                    Live Demo
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Project Image -->
+        <div class="mb-12">
+            <div class="relative overflow-hidden rounded-2xl border border-color bg-card" style="height: 500px;">
+                {% if project.image %}
+                <img src="{{ project.image.url }}" 
+                     alt="{{ project.title }}" 
+                     class="w-full h-full object-cover">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+                    <i class="bi bi-image text-9xl text-accent-primary/30"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Project Content -->
+        <div class="grid lg:grid-cols-3 gap-12">
+            <!-- Main Content -->
+            <div class="lg:col-span-2">
+                <!-- Description -->
+                <div class="mb-12">
+                    <h2 class="text-2xl font-bold font-poppins mb-4">About This Project</h2>
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-secondary text-lg leading-relaxed">
+                            {{ project.description }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tech Stack Details -->
+                <div class="mb-12">
+                    <h2 class="text-2xl font-bold font-poppins mb-6">Technologies Used</h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        {% for tech in project.tech_stack %}
+                        <div class="flex items-center gap-3 bg-card border border-color rounded-lg p-4 hover:border-accent-primary transition-all">
+                            <div class="w-10 h-10 bg-accent-primary/20 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-check2 text-accent-primary text-xl"></i>
+                            </div>
+                            <span class="font-medium">{{ tech }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Project Info Card -->
+                <div class="bg-card border border-color rounded-xl p-6 mb-8 sticky top-24">
+                    <h3 class="text-xl font-bold font-poppins mb-6">Project Info</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-muted mb-1">Created</p>
+                            <p class="font-medium">{{ project.created_at|date:"F d, Y" }}</p>
+                        </div>
+
+                        <div class="border-t border-color pt-4">
+                            <p class="text-sm text-muted mb-1">Last Updated</p>
+                            <p class="font-medium">{{ project.updated_at|date:"F d, Y" }}</p>
+                        </div>
+
+                        <div class="border-t border-color pt-4">
+                            <p class="text-sm text-muted mb-1">Category</p>
+                            <p class="font-medium">Web Development</p>
+                        </div>
+
+                        {% if project.github_link or project.demo_link %}
+                        <div class="border-t border-color pt-4">
+                            <p class="text-sm text-muted mb-3">Links</p>
+                            <div class="space-y-2">
+                                {% if project.github_link %}
+                                <a href="{{ project.github_link }}" target="_blank" 
+                                   class="flex items-center gap-2 text-accent-primary hover:text-accent-secondary transition-colors">
+                                    <i class="bi bi-github"></i>
+                                    <span>Source Code</span>
+                                </a>
+                                {% endif %}
+                                {% if project.demo_link %}
+                                <a href="{{ project.demo_link }}" target="_blank" 
+                                   class="flex items-center gap-2 text-accent-primary hover:text-accent-secondary transition-colors">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                    <span>Live Demo</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Projects -->
+        {% if related_projects %}
+        <div class="mt-20">
+            <h2 class="text-3xl font-bold font-poppins mb-8">Related Projects</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                {% for related in related_projects %}
+                <div class="project-card group">
+                    <div class="relative overflow-hidden h-48 bg-card rounded-t-lg">
+                        {% if related.image %}
+                        <img src="{{ related.image.url }}" 
+                             alt="{{ related.title }}" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+                            <i class="bi bi-folder text-6xl text-accent-primary/30"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 line-clamp-1">{{ related.title }}</h3>
+                        <p class="text-secondary text-sm mb-4 line-clamp-2">{{ related.description }}</p>
+                        <a href="{% url 'project_detail' related.id %}" class="btn-small-primary w-full text-center">
+                            View Project
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

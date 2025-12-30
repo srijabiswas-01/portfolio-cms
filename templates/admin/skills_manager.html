@@ -1,0 +1,387 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Manage Skills - Admin Panel{% endblock %}
+{% block page_title %}Manage Skills{% endblock %}
+
+{% block content %}
+<!-- Header Actions -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+            All Skills
+        </h2>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
+            Manage your technical skills and expertise
+        </p>
+    </div>
+    <button onclick="openAddModal()" class="admin-btn-primary">
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Skill
+    </button>
+</div>
+
+<!-- Skills Grid -->
+{% if skills %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+    {% for skill in skills %}
+    <div class="admin-card">
+        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    {% if skill.icon %}
+                    <i class="bi bi-{{ skill.icon }}" style="font-size: 1.5rem; color: var(--admin-accent-primary);"></i>
+                    {% endif %}
+                    <div>
+                        <h3 style="font-weight: 600; color: var(--admin-text-primary);">{{ skill.name }}</h3>
+                        {% if skill.is_active %}
+                        <span class="admin-badge admin-badge-success" style="margin-top: 0.25rem;">Active</span>
+                        {% else %}
+                        <span class="admin-badge admin-badge-warning" style="margin-top: 0.25rem;">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <p style="font-size: 0.875rem; color: var(--admin-text-muted);">{{ skill.category_name }}</p>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button onclick="editSkill({{ skill.id }}, '{{ skill.name|escapejs }}', '{{ skill.category_id|default:'' }}', {{ skill.proficiency }}, '{{ skill.icon }}', {{ skill.is_active|yesno:'true,false' }})" 
+                        class="admin-btn-secondary" 
+                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button onclick="deleteSkill({{ skill.id }}, '{{ skill.name|escapejs }}')" 
+                        class="admin-btn-danger" 
+                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <form method="POST" action="{% url 'admin_skill_toggle_active' skill.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="admin-btn-secondary"
+                            style="padding: 0.35rem 0.6rem; font-size: 0.75rem;">
+                        {% if skill.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Proficiency Bar -->
+        <div style="margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.75rem; color: var(--admin-text-muted);">Proficiency</span>
+                <span style="font-weight: 600; color: var(--admin-accent-primary);">{{ skill.proficiency }}%</span>
+            </div>
+            <div style="height: 8px; background: var(--admin-bg-secondary); border-radius: 999px; overflow: hidden;">
+                <div style="height: 100%; background: linear-gradient(to right, var(--admin-accent-primary), var(--admin-accent-secondary)); width: {{ skill.proficiency }}%; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="admin-card" style="text-align: center; padding: 4rem 2rem;">
+    <i class="bi bi-star" style="font-size: 4rem; color: var(--admin-text-muted); margin-bottom: 1rem;"></i>
+    <h3 style="font-weight: 600; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+        No skills added yet
+    </h3>
+    <p style="color: var(--admin-text-muted); margin-bottom: 1.5rem;">
+        Start by adding your technical skills and expertise
+    </p>
+    <button onclick="openAddModal()" class="admin-btn-primary">
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Skill
+    </button>
+</div>
+{% endif %}
+
+<!-- Category Management -->
+<div class="admin-card" style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: var(--admin-text-primary); margin-bottom: 0.25rem;">
+                Skill Categories
+            </h2>
+            <p style="color: var(--admin-text-muted); font-size: 0.85rem; margin: 0;">
+                Define categories that control which skills are visible on the public site.
+            </p>
+        </div>
+        <button type="button" class="admin-btn-secondary" onclick="resetCategoryForm()">
+            <i class="bi bi-plus-lg mr-1"></i>
+            New Category
+        </button>
+    </div>
+
+    <form id="categoryForm" method="POST" action="{% url 'admin_skill_category_manage' %}">
+        {% csrf_token %}
+        <input type="hidden" name="category_id" id="category_id">
+        <h3 id="categoryFormTitle" style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Add New Category
+        </h3>
+
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="category_name">Category Name *</label>
+            <input type="text"
+                   id="category_name"
+                   name="name"
+                   class="admin-form-input"
+                   placeholder="e.g., Data Science"
+                   required>
+        </div>
+
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="category_description">Description</label>
+            <textarea id="category_description"
+                      name="description"
+                      class="admin-form-textarea"
+                      rows="2"
+                      placeholder="Optional short description"></textarea>
+        </div>
+
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="category_order">Display Order</label>
+            <input type="number"
+                   id="category_order"
+                   name="order"
+                   class="admin-form-input"
+                   value="0"
+                   min="0">
+        </div>
+
+        <div class="admin-form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox"
+                   id="category_active"
+                   name="is_active"
+                   checked
+                   style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+            <label for="category_active" style="margin: 0; cursor: pointer; color: var(--admin-text-primary);">
+                Keep category active
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
+            <button type="submit" class="admin-btn-success" style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="bi bi-check-lg"></i>
+                Save Category
+            </button>
+            <button type="button" class="admin-btn-secondary" onclick="resetCategoryForm()">
+                Reset
+            </button>
+        </div>
+    </form>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+        {% for category in categories %}
+        <div class="admin-card" style="padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.1rem;">{{ category.name }}</h3>
+                    <p style="font-size: 0.85rem; color: var(--admin-text-muted); margin: 0.2rem 0;">
+                        {{ category.description|default:"No description added yet." }}
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-secondary); margin: 0;">
+                        Slug: {{ category.slug }} | Order: {{ category.order }}
+                    </p>
+                </div>
+                <div>
+                    {% if category.is_active %}
+                    <span class="admin-badge admin-badge-success">Active</span>
+                    {% else %}
+                    <span class="admin-badge admin-badge-warning">Inactive</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                <button type="button"
+                        class="admin-btn-secondary"
+                        onclick="prefillCategoryForm({{ category.id }}, '{{ category.name|escapejs }}', '{{ category.description|escapejs }}', {{ category.order }}, {{ category.is_active|yesno:'true,false' }})">
+                    Edit
+                </button>
+                <form method="POST" action="{% url 'admin_skill_category_toggle_active' category.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="admin-btn-secondary">
+                        {% if category.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+                <form method="POST" action="{% url 'admin_skill_category_delete' category.id %}" onsubmit="return confirm('Delete category {{ category.name }}? Skills will be uncategorized.');">
+                    {% csrf_token %}
+                    <button type="submit" class="admin-btn-danger">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Skill Modal -->
+<div id="skillModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center; overflow-y: auto;">
+    <div class="admin-card" style="max-width: 500px; margin: 2rem; width: 100%;">
+        <h3 id="modalTitle" style="font-weight: 600; margin-bottom: 1.5rem; color: var(--admin-text-primary);">
+            Add New Skill
+        </h3>
+        
+        <form id="skillForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" id="skill_id" name="skill_id">
+            
+            <!-- Skill Name -->
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="skill_name">Skill Name *</label>
+                <input type="text" 
+                       id="skill_name" 
+                       name="name" 
+                       class="admin-form-input"
+                       placeholder="e.g., Python"
+                       required>
+            </div>
+            
+            <!-- Category -->
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="category">Category *</label>
+                <select id="category" name="category_id" class="admin-form-select" required>
+                    <option value="">Select category</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Proficiency -->
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="proficiency">
+                    Proficiency Level *
+                    <span id="proficiencyValue" style="color: var(--admin-accent-primary); font-weight: 600;">50%</span>
+                </label>
+                <input type="range" 
+                       id="proficiency" 
+                       name="proficiency" 
+                       class="w-full"
+                       min="0" 
+                       max="100" 
+                       value="50"
+                       style="width: 100%; accent-color: var(--admin-accent-primary);"
+                       oninput="document.getElementById('proficiencyValue').textContent = this.value + '%'">
+                </div>
+                
+                <!-- Icon -->
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="icon">Bootstrap Icon Name</label>
+                <input type="text" 
+                       id="icon" 
+                       name="icon" 
+                       class="admin-form-input"
+                       placeholder="e.g., code-slash">
+                <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                    Find icons at <a href="https://icons.getbootstrap.com" target="_blank" style="color: var(--admin-accent-primary);">icons.getbootstrap.com</a>
+                </p>
+                </div>
+                
+                <div class="admin-form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox"
+                           id="skill_active"
+                           name="is_active"
+                           checked
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                    <label for="skill_active" style="margin: 0; cursor: pointer; color: var(--admin-text-primary);">
+                        Mark skill as active
+                    </label>
+                </div>
+            
+            <!-- Buttons -->
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="button" onclick="closeSkillModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                    Cancel
+                </button>
+                <button type="submit" class="admin-btn-success" style="flex: 1; justify-content: center;">
+                    <i class="bi bi-check-lg mr-2"></i>
+                    Save Skill
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
+        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Delete Skill
+        </h3>
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
+            Are you sure you want to delete "<span id="deleteSkillName"></span>"?
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                Cancel
+            </button>
+            <form id="deleteForm" method="POST" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const skillModal = document.getElementById('skillModal');
+    const categoryForm = document.getElementById('categoryForm');
+
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = 'Add New Skill';
+        document.getElementById('skillForm').reset();
+        document.getElementById('skill_id').value = '';
+        document.getElementById('category').value = '';
+        document.getElementById('skill_active').checked = true;
+        document.getElementById('skillForm').action = '{% url "admin_skills_create" %}';
+        skillModal.style.display = 'flex';
+    }
+    
+    function editSkill(id, name, categoryId, proficiency, icon, isActive) {
+        document.getElementById('modalTitle').textContent = 'Edit Skill';
+        document.getElementById('skill_id').value = id;
+        document.getElementById('skill_name').value = name;
+        document.getElementById('category').value = categoryId || '';
+        document.getElementById('proficiency').value = proficiency;
+        document.getElementById('proficiencyValue').textContent = proficiency + '%';
+        document.getElementById('icon').value = icon;
+        document.getElementById('skill_active').checked = String(isActive) === 'true';
+        document.getElementById('skillForm').action = `/admin/skills/${id}/edit/`;
+        skillModal.style.display = 'flex';
+    }
+    
+    function closeSkillModal() {
+        skillModal.style.display = 'none';
+    }
+    
+    function deleteSkill(id, name) {
+        document.getElementById('deleteSkillName').textContent = name;
+        document.getElementById('deleteForm').action = `/admin/skills/${id}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    function prefillCategoryForm(id, name, description, order, isActive) {
+        document.getElementById('category_id').value = id;
+        document.getElementById('category_name').value = name;
+        document.getElementById('category_description').value = description;
+        document.getElementById('category_order').value = order;
+        document.getElementById('category_active').checked = String(isActive) === 'true';
+        document.getElementById('categoryFormTitle').textContent = 'Update Category';
+    }
+
+    function resetCategoryForm() {
+        categoryForm.reset();
+        document.getElementById('category_id').value = '';
+        document.getElementById('category_active').checked = true;
+        document.getElementById('categoryFormTitle').textContent = 'Add New Category';
+    }
+</script>
+{% endblock %}

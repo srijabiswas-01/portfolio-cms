@@ -1,0 +1,233 @@
+<!-- templates/public/about.html -->
+{% extends 'public/base.html' %}
+
+{% block title %}About Me - Portfolio{% endblock %}
+
+{% block content %}
+<!-- About Hero Section -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <!-- Profile Image Section -->
+            <div class="relative">
+                <div class="relative w-full max-w-md mx-auto">
+                    <!-- Decorative Background -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 rounded-2xl transform rotate-6"></div>
+                    
+                    <!-- Profile Card -->
+                    <div class="relative bg-card border border-color rounded-2xl p-8 shadow-lg">
+                        <div class="aspect-square rounded-xl overflow-hidden mb-6 bg-secondary">
+                            {% if profile.image %}
+                            <img src="{{ profile.image.url }}" alt="Profile" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                <i class="bi bi-person-circle text-9xl text-accent-primary/30"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold font-poppins mb-2">{{ profile.name }}</h3>
+                            <p class="text-accent-primary font-medium mb-4">{{ profile.role }}</p>
+                            
+                            <!-- Social Links -->
+                            <div class="flex justify-center gap-3">
+                                <a href="{{ profile.github }}" target="_blank" class="social-icon-small">
+                                    <i class="bi bi-github"></i>
+                                </a>
+                                <a href="{{ profile.linkedin }}" target="_blank" class="social-icon-small">
+                                    <i class="bi bi-linkedin"></i>
+                                </a>
+                                <a href="mailto:{{ profile.email }}" class="social-icon-small">
+                                    <i class="bi bi-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- About Content -->
+            <div class="space-y-6">
+                {% if about_page_visibility.page_title %}
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-4">
+                        {{ about_page.page_title|default:"About " }}<span class="text-accent-primary">Me</span>
+                    </h1>
+                    <div class="w-20 h-1 bg-accent-primary rounded-full mb-6"></div>
+                </div>
+                {% endif %}
+                
+                {% if about_page_visibility.introduction %}
+                <div class="space-y-4 text-secondary leading-relaxed">
+                    {% if about_page.introduction %}
+                        {{ about_page.introduction|safe }}
+                    {% else %}
+                    <p>
+                        {{ profile.bio }}
+                    </p>
+                    
+                    <p>
+                        Currently pursuing MCA (Master of Computer Applications) with a focus on 
+                        <span class="text-accent-primary font-medium">Data Science</span>, 
+                        <span class="text-accent-primary font-medium">Artificial Intelligence</span>, and 
+                        <span class="text-accent-primary font-medium">Machine Learning</span>.
+                    </p>
+                    
+                    <p>
+                        I'm passionate about building intelligent solutions that solve real-world problems 
+                        and creating impactful web applications that enhance user experiences.
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if about_page_visibility.stats_section %}
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4 pt-4">
+                    <div class="stat-card">
+                        <i class="bi bi-mortarboard text-3xl text-accent-primary mb-2"></i>
+                        <p class="text-2xl font-bold">MCA</p>
+                        <p class="text-sm text-muted">Student</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="bi bi-code-slash text-3xl text-accent-secondary mb-2"></i>
+                        <p class="text-2xl font-bold">{{ projects_count }}+</p>
+                        <p class="text-sm text-muted">Projects</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="bi bi-file-text text-3xl text-accent-success mb-2"></i>
+                        <p class="text-2xl font-bold">{{ blogs_count }}+</p>
+                        <p class="text-sm text-muted">Articles</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="bi bi-star text-3xl text-accent-warning mb-2"></i>
+                        <p class="text-2xl font-bold">5+</p>
+                        <p class="text-sm text-muted">Skills</p>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="pt-4">
+                    <a href="{{ profile.resume }}" download class="btn-primary">
+                        <i class="bi bi-download mr-2"></i>
+                        Download Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if about_page.show_education %}
+<!-- Education Section -->
+<section class="py-20 bg-secondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Education</h2>
+            <p class="section-subtitle">My academic journey</p>
+        </div>
+        
+        <div class="max-w-3xl mx-auto space-y-6">
+            {% for edu in education %}
+            <div class="timeline-card">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-accent-primary rounded-full flex items-center justify-center">
+                            <i class="bi bi-mortarboard text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-xl font-bold font-poppins">{{ edu.degree }}</h3>
+                                <p class="text-accent-primary font-medium">{{ edu.institution }}</p>
+                            </div>
+                            <span class="text-sm text-muted">{{ edu.year }}</span>
+                        </div>
+                        <p class="text-secondary text-sm">{{ edu.description }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if about_page_visibility.interests %}
+<!-- Interests Section -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Interests & Passion</h2>
+            <p class="section-subtitle">What drives me</p>
+        </div>
+        
+        <div class="grid md:grid-cols-4 gap-6">
+            <div class="interest-card">
+                <i class="bi bi-graph-up text-4xl text-accent-primary mb-4"></i>
+                <h3 class="font-semibold mb-2">Data Science</h3>
+                <p class="text-sm text-muted">Extracting insights from data</p>
+            </div>
+            <div class="interest-card">
+                <i class="bi bi-robot text-4xl text-accent-secondary mb-4"></i>
+                <h3 class="font-semibold mb-2">AI & ML</h3>
+                <p class="text-sm text-muted">Building intelligent systems</p>
+            </div>
+            <div class="interest-card">
+                <i class="bi bi-code-square text-4xl text-accent-success mb-4"></i>
+                <h3 class="font-semibold mb-2">Web Development</h3>
+                <p class="text-sm text-muted">Creating web solutions</p>
+            </div>
+            <div class="interest-card">
+                <i class="bi bi-lightbulb text-4xl text-accent-warning mb-4"></i>
+                <h3 class="font-semibold mb-2">Problem Solving</h3>
+                <p class="text-sm text-muted">Finding creative solutions</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if about_page_visibility.values %}
+<!-- Values Section -->
+<section class="py-20 bg-secondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Core Values</h2>
+            <p class="section-subtitle">Principles I live by</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div class="value-card">
+                <div class="w-16 h-16 bg-accent-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="bi bi-trophy text-3xl text-accent-primary"></i>
+                </div>
+                <h3 class="text-xl font-bold font-poppins mb-3">Excellence</h3>
+                <p class="text-secondary text-sm">
+                    Committed to delivering high-quality work and continuous improvement in everything I do.
+                </p>
+            </div>
+            <div class="value-card">
+                <div class="w-16 h-16 bg-accent-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="bi bi-heart text-3xl text-accent-secondary"></i>
+                </div>
+                <h3 class="text-xl font-bold font-poppins mb-3">Passion</h3>
+                <p class="text-secondary text-sm">
+                    Driven by genuine enthusiasm for technology and creating meaningful solutions.
+                </p>
+            </div>
+            <div class="value-card">
+                <div class="w-16 h-16 bg-accent-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="bi bi-people text-3xl text-accent-success"></i>
+                </div>
+                <h3 class="text-xl font-bold font-poppins mb-3">Collaboration</h3>
+                <p class="text-secondary text-sm">
+                    Believe in the power of teamwork and knowledge sharing to achieve greater goals.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

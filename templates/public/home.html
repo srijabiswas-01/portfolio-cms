@@ -1,0 +1,357 @@
+<!-- templates/public/home.html -->
+{% extends 'public/base.html' %}
+
+{% block title %}Home - Portfolio{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="min-h-screen flex items-center relative overflow-hidden">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-accent-primary rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+        <div class="absolute top-40 right-10 w-72 h-72 bg-accent-secondary rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-20 left-1/2 w-72 h-72 bg-accent-primary rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <!-- Text Content -->
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <p class="text-accent-primary font-medium">👋 Hello, I'm</p>
+                    {% if home_page_visibility.hero_title %}
+                    <p class="text-2xl md:text-7xl font-bold font-poppins">
+                        <span class="hero-name">{{ home_page.hero_title|default:"Data Scientist" }}</span>
+                    </p>
+                    {% endif %}
+                    {% if home_page_visibility.hero_subtitle %}
+                    <div class="text-2xl md:text-3xl text-secondary font-medium">
+                        <span class="hero-subtitle">{{ home_page.hero_subtitle|default:"Data Analyst" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="text-2xl md:text-3xl text-secondary font-medium">
+                        <span class="typing-text"></span>
+                    </div>
+                </div>
+                
+                {% if home_page_visibility.hero_description %}
+                <p class="text-lg text-secondary leading-relaxed">
+                    {{ home_page.hero_description|default:"MCA Student specializing in Data Science..." }}
+                </p>
+                {% endif %}
+                
+                <div class="flex flex-wrap gap-4">
+                    <a href="{% url 'projects' %}" class="btn-primary">
+                        View Projects
+                        <i class="bi bi-arrow-right ml-2"></i>
+                    </a>
+                    <a href="{% url 'contact' %}" class="btn-secondary">
+                        Get In Touch
+                    </a>
+                </div>
+                
+                <!-- Social Stats -->
+                <div class="flex gap-8 pt-4">
+                    <div>
+                        <p class="text-3xl font-bold text-accent-primary">{{ projects_count }}+</p>
+                        <p class="text-sm text-muted">Projects</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-accent-primary">{{ blogs_count }}+</p>
+                        <p class="text-sm text-muted">Blog Posts</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-accent-primary">5+</p>
+                        <p class="text-sm text-muted">Tech Stack</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hero Image/Illustration -->
+            <div class="relative">
+                <div class="relative w-full aspect-square">
+                    <!-- Decorative Elements -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 rounded-full blur-3xl"></div>
+                    
+                    <!-- Main Visual -->
+                    <div class="relative z-10 w-full h-full flex items-center justify-center">
+                        <div class="w-80 h-80 rounded-full border-4 border-accent-primary/30 flex items-center justify-center bg-card/50 backdrop-blur-sm">
+                            <i class="bi bi-code-slash text-9xl text-accent-primary"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating Icons -->
+                    <div class="absolute top-10 right-10 floating-icon">
+                        <div class="p-4 bg-card rounded-lg shadow-lg border border-color">
+                            <i class="bi bi-file-code text-3xl text-accent-primary"></i>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-20 left-10 floating-icon animation-delay-2000">
+                        <div class="p-4 bg-card rounded-lg shadow-lg border border-color">
+                            <i class="bi bi-database text-3xl text-accent-secondary"></i>
+                        </div>
+                    </div>
+                    <div class="absolute top-1/2 right-0 floating-icon animation-delay-4000">
+                        <div class="p-4 bg-card rounded-lg shadow-lg border border-color">
+                            <i class="bi bi-brain text-3xl text-accent-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Skills Highlight Section -->
+<section class="py-20 bg-secondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Core Expertise</h2>
+            <p class="section-subtitle">Technologies I work with</p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {% for skill in featured_skills %}
+            <div class="skill-card group">
+                <div class="text-5xl mb-4 text-accent-primary group-hover:scale-110 transition-transform">
+                    <i class="bi bi-{{ skill.icon }}"></i>
+                </div>
+                <h3 class="font-semibold text-lg">{{ skill.name }}</h3>
+                        <p class="text-sm text-muted mt-2">{{ skill.category_name }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-12">
+            <a href="{% url 'skills' %}" class="btn-secondary">
+                View All Skills
+                <i class="bi bi-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Projects Section -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Featured Projects</h2>
+            <p class="section-subtitle">Some of my recent work</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            {% for project in featured_projects %}
+            <div class="project-card group">
+                <!-- Project Image -->
+                <div class="relative overflow-hidden rounded-t-lg h-48 bg-card">
+                    {% if project.image %}
+                    <img src="{{ project.image.url }}" alt="{{ project.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i class="bi bi-folder text-6xl text-accent-primary/30"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-card to-transparent opacity-60"></div>
+                </div>
+                
+                <!-- Project Content -->
+                <div class="p-6">
+                    <h3 class="text-xl font-bold font-poppins mb-2 group-hover:text-accent-primary transition">
+                        {{ project.title }}
+                    </h3>
+                    <p class="text-secondary text-sm mb-4 line-clamp-3">
+                        {{ project.description }}
+                    </p>
+                    
+                    <!-- Tech Stack -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% for tech in project.tech_stack %}
+                        <span class="tech-badge">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3">
+                        <a href="{% url 'project_detail' project.id %}" class="btn-small-primary flex-1 text-center">
+                            View Details
+                        </a>
+                        {% if project.github_link %}
+                        <a href="{{ project.github_link }}" target="_blank" class="btn-small-secondary">
+                            <i class="bi bi-github"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-12">
+            <a href="{% url 'projects' %}" class="btn-primary">
+                View All Projects
+                <i class="bi bi-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+<!-- Latest Blogs Section -->
+<section class="py-20 bg-secondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Latest Blog Posts</h2>
+            <p class="section-subtitle">Thoughts and insights</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            {% for blog in latest_blogs %}
+            <div class="blog-card group">
+                <!-- Blog Cover -->
+                <div class="relative overflow-hidden rounded-t-lg h-48 bg-card">
+                    {% if blog.cover_image %}
+                    <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20">
+                        <i class="bi bi-file-text text-6xl text-accent-primary/50"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Blog Content -->
+                <div class="p-6">
+                    <div class="flex items-center gap-3 text-sm text-muted mb-3">
+                        <span><i class="bi bi-calendar3 mr-1"></i>{{ blog.published_date|date:"M d, Y" }}</span>
+                        <span><i class="bi bi-clock mr-1"></i>{{ blog.read_time }} min read</span>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold font-poppins mb-2 group-hover:text-accent-primary transition line-clamp-2">
+                        {{ blog.title }}
+                    </h3>
+                    
+                    <p class="text-secondary text-sm mb-4 line-clamp-3">
+                        {{ blog.preview }}
+                    </p>
+                    
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        {% for tag in blog.tags|slice:":3" %}
+                        <span class="tag-badge">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <a href="{% url 'blog_detail' blog.id %}" class="text-accent-primary font-medium hover:underline">
+                        Read More <i class="bi bi-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-12">
+            <a href="{% url 'blogs' %}" class="btn-secondary">
+                View All Posts
+                <i class="bi bi-arrow-right ml-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+{% if home_page_visibility.cta_section %}
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="bg-gradient-to-r from-accent-primary to-accent-secondary rounded-2xl p-12 text-center">
+            <h2 class="text-4xl font-bold font-poppins mb-4">Let's Work Together</h2>
+            <p class="text-lg mb-8 opacity-90">
+                Have a project in mind? Let's create something amazing together.
+            </p>
+            <a href="{% url 'contact' %}" class="inline-block bg-white text-accent-primary px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition">
+                Get In Touch
+                <i class="bi bi-send ml-2"></i>
+            </a>
+        </div>
+    </div>
+    </div>
+</section>
+{% endif %}
+
+<style>
+    @keyframes blob {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+    
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+    
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .floating-icon {
+        animation: float 3s ease-in-out infinite;
+    }
+</style>
+
+{{ typing_texts|json_script:"typingTextsData" }}
+<script>
+    // Typing effect
+    const defaultTexts = ['Data Scientist', 'AI & ML Engineer', 'Python Developer', 'Web Developer'];
+    const dataScript = document.getElementById('typingTextsData');
+    let texts = [];
+
+    if (dataScript) {
+        try {
+            texts = JSON.parse(dataScript.textContent) || [];
+        } catch (error) {
+            console.error('Failed to parse typing texts data:', error);
+        }
+    }
+
+    if (!texts.length) {
+        texts = defaultTexts;
+    }
+
+    let textIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    const typingElement = document.querySelector('.typing-text');
+    
+    function type() {
+        if (!typingElement) {
+            return;
+        }
+
+        const currentText = texts[textIndex];
+        
+        if (isDeleting) {
+            typingElement.textContent = currentText.substring(0, charIndex - 1);
+            charIndex--;
+        } else {
+            typingElement.textContent = currentText.substring(0, charIndex + 1);
+            charIndex++;
+        }
+        
+        if (!isDeleting && charIndex === currentText.length) {
+            setTimeout(() => isDeleting = true, 2000);
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            textIndex = (textIndex + 1) % texts.length;
+        }
+        
+        setTimeout(type, isDeleting ? 50 : 150);
+    }
+    
+    type();
+</script>
+{% endblock %}

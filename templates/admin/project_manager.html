@@ -1,0 +1,175 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Manage Projects - Admin Panel{% endblock %}
+{% block page_title %}Manage Projects{% endblock %}
+
+{% block content %}
+<!-- Header Actions -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+            All Projects
+        </h2>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
+            Manage your portfolio projects
+        </p>
+    </div>
+    <a href="{% url 'admin_project_form' %}" class="admin-btn-primary">
+        <i class="bi bi-plus-lg mr-2"></i>
+        New Project
+    </a>
+</div>
+
+<!-- Projects Grid -->
+{% if projects %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+    {% for project in projects %}
+    <div class="admin-card" style="padding: 0; overflow: hidden;">
+        <!-- Project Image -->
+        <div style="position: relative; height: 200px; background: var(--admin-bg-primary);">
+            {% if project.image %}
+            <img src="{{ project.image.url }}" 
+                 alt="{{ project.title }}" 
+                 style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--admin-text-muted);">
+                <i class="bi bi-folder text-6xl"></i>
+            </div>
+            {% endif %}
+            
+            <!-- Featured Badge -->
+            {% if project.is_featured %}
+            <div style="position: absolute; top: 1rem; right: 1rem;">
+                <span class="admin-badge admin-badge-warning">
+                    <i class="bi bi-star-fill mr-1"></i>
+                    Featured
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Project Content -->
+        <div style="padding: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <h3 style="font-weight: 600; font-size: 1.125rem; color: var(--admin-text-primary); margin: 0;">
+                    {{ project.title }}
+                </h3>
+                {% if project.is_active %}
+                <span class="admin-badge admin-badge-success">Active</span>
+                {% else %}
+                <span class="admin-badge admin-badge-warning">Inactive</span>
+                {% endif %}
+            </div>
+            
+            <p style="color: var(--admin-text-secondary); font-size: 0.875rem; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ project.description }}
+            </p>
+            
+            <!-- Tech Stack -->
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                {% for tech in project.tech_stack|slice:":3" %}
+                <span class="admin-badge admin-badge-info">{{ tech }}</span>
+                {% endfor %}
+                {% if project.tech_stack|length > 3 %}
+                <span class="admin-badge admin-badge-info">+{{ project.tech_stack|length|add:"-3" }}</span>
+                {% endif %}
+            </div>
+            
+            <!-- Meta Info -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.75rem; color: var(--admin-text-muted);">
+                <span>
+                    <i class="bi bi-calendar3 mr-1"></i>
+                    {{ project.created_at|date:"M d, Y" }}
+                </span>
+                {% if project.github_link %}
+                <span>
+                    <i class="bi bi-github mr-1"></i>
+                    GitHub
+                </span>
+                {% endif %}
+                {% if project.demo_link %}
+                <span>
+                    <i class="bi bi-box-arrow-up-right mr-1"></i>
+                    Demo
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.75rem;">
+                <a href="{% url 'project_detail' project.id %}" 
+                   target="_blank"
+                   class="admin-btn-secondary" 
+                   style="flex: 1; justify-content: center; font-size: 0.875rem;">
+                    <i class="bi bi-eye mr-1"></i>
+                    View
+                </a>
+                <a href="{% url 'admin_project_edit' project.id %}" 
+                   class="admin-btn-primary" 
+                   style="flex: 1; justify-content: center; font-size: 0.875rem;">
+                    <i class="bi bi-pencil mr-1"></i>
+                    Edit
+                </a>
+                <button onclick="confirmDelete({{ project.id }}, '{{ project.title|escapejs }}')" 
+                        class="admin-btn-danger" 
+                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="admin-card" style="text-align: center; padding: 4rem 2rem;">
+    <i class="bi bi-folder" style="font-size: 4rem; color: var(--admin-text-muted); margin-bottom: 1rem;"></i>
+    <h3 style="font-weight: 600; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+        No projects yet
+    </h3>
+    <p style="color: var(--admin-text-muted); margin-bottom: 1.5rem;">
+        Start by adding your first project to showcase your work
+    </p>
+    <a href="{% url 'admin_project_form' %}" class="admin-btn-primary">
+        <i class="bi bi-plus-lg mr-2"></i>
+        Add Project
+    </a>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
+        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Delete Project
+        </h3>
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
+            Are you sure you want to delete "<span id="deleteProjectTitle"></span>"? This action cannot be undone.
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                Cancel
+            </button>
+            <form id="deleteForm" method="POST" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(projectId, projectTitle) {
+        document.getElementById('deleteProjectTitle').textContent = projectTitle;
+        document.getElementById('deleteForm').action = `/admin/projects/${projectId}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+</script>
+{% endblock %}

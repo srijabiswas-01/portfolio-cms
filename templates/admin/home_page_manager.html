@@ -1,0 +1,198 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Home Page Manager - Admin Panel{% endblock %}
+{% block page_title %}Home Page Content{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px;">
+    <form method="POST" id="homePageForm">
+        {% csrf_token %}
+        
+        <!-- Hero Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-star-fill text-warning mr-2"></i>
+                Hero Section
+            </h2>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="hero_title">Hero Title</label>
+                <input type="text" 
+                       id="hero_title" 
+                       name="hero_title" 
+                       class="admin-form-input"
+                       value="{{ home_page.hero_title }}"
+                       placeholder="Your Name"
+                       style="font-size: 1.25rem; font-weight: 600;">
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="hero_subtitle">Hero Subtitle</label>
+                <input type="text" 
+                       id="hero_subtitle" 
+                       name="hero_subtitle" 
+                       class="admin-form-input"
+                       value="{{ home_page.hero_subtitle }}"
+                       placeholder="MCA Student | Data Scientist">
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="hero_description">Hero Description</label>
+                <textarea id="hero_description" 
+                          name="hero_description" 
+                          class="admin-form-textarea"
+                          rows="4"
+                          placeholder="Brief introduction about yourself...">{{ home_page.hero_description }}</textarea>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Hero Title</label>
+                    <input type="checkbox"
+                           name="show_hero_title"
+                           {% if home_page.show_hero_title %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Hero Subtitle</label>
+                    <input type="checkbox"
+                           name="show_hero_subtitle"
+                           {% if home_page.show_hero_subtitle %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Hero Description</label>
+                    <input type="checkbox"
+                           name="show_hero_description"
+                           {% if home_page.show_hero_description %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-bar-chart-fill text-info mr-2"></i>
+                Statistics Section
+            </h2>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                <input type="checkbox" 
+                       id="show_stats" 
+                       name="show_stats" 
+                       {% if home_page.show_stats %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                <label for="show_stats" style="color: var(--admin-text-primary); cursor: pointer;">
+                    Show Statistics Section
+                </label>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="custom_stat_label">Custom Stat Label</label>
+                    <input type="text" 
+                           id="custom_stat_label" 
+                           name="custom_stat_label" 
+                           class="admin-form-input"
+                           value="{{ home_page.custom_stat_label }}"
+                           placeholder="Tech Stack">
+                </div>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="custom_stat_value">Custom Stat Value</label>
+                    <input type="text" 
+                           id="custom_stat_value" 
+                           name="custom_stat_value" 
+                           class="admin-form-input"
+                           value="{{ home_page.custom_stat_value }}"
+                           placeholder="5+">
+                </div>
+            </div>
+            
+            <div class="admin-alert admin-alert-info" style="margin-top: 1rem;">
+                <i class="bi bi-info-circle"></i>
+                <span>Projects and Blogs count are automatically calculated from your content.</span>
+            </div>
+        </div>
+        
+        <!-- Call to Action Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-megaphone-fill text-success mr-2"></i>
+                Call to Action Section
+            </h2>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                <input type="checkbox"
+                       id="show_cta_section"
+                       name="show_cta_section"
+                       {% if home_page.show_cta_section %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                <label for="show_cta_section" style="color: var(--admin-text-primary); cursor: pointer;">
+                    Show Call to Action Section
+                </label>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="cta_title">CTA Title</label>
+                <input type="text" 
+                       id="cta_title" 
+                       name="cta_title" 
+                       class="admin-form-input"
+                       value="{{ home_page.cta_title }}"
+                       placeholder="Let's Work Together">
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="cta_description">CTA Description</label>
+                <textarea id="cta_description" 
+                          name="cta_description" 
+                          class="admin-form-textarea"
+                          rows="3"
+                          placeholder="Have a project in mind?">{{ home_page.cta_description }}</textarea>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="cta_button_text">CTA Button Text</label>
+                <input type="text" 
+                       id="cta_button_text" 
+                       name="cta_button_text" 
+                       class="admin-form-input"
+                       value="{{ home_page.cta_button_text }}"
+                       placeholder="Get In Touch">
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="{% url 'admin_dashboard' %}" class="admin-btn-secondary">
+                <i class="bi bi-x-lg mr-2"></i>
+                Cancel
+            </a>
+            <button type="submit" class="admin-btn-success">
+                <i class="bi bi-check-lg mr-2"></i>
+                Save Changes
+            </button>
+        </div>
+    </form>
+    
+    <!-- Preview Section -->
+    <div class="admin-card" style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-weight: 600; color: var(--admin-text-primary);">
+                <i class="bi bi-eye mr-2"></i>
+                Live Preview
+            </h3>
+            <a href="{% url 'home' %}" target="_blank" class="admin-btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                <i class="bi bi-box-arrow-up-right mr-1"></i>
+                View Live Page
+            </a>
+        </div>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
+            Save your changes and refresh the home page to see updates.
+        </p>
+    </div>
+</div>
+{% endblock %}

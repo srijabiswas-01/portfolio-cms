@@ -1,0 +1,317 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if project %}Edit Project{% else %}New Project{% endif %} - Admin Panel{% endblock %}
+{% block page_title %}{% if project %}Edit Project{% else %}Add New Project{% endif %}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px;">
+    <!-- Back Button -->
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{% url 'admin_project_manager' %}" class="admin-btn-secondary">
+            <i class="bi bi-arrow-left mr-2"></i>
+            Back to Projects
+        </a>
+    </div>
+    
+    <!-- Project Form -->
+    <form method="POST" enctype="multipart/form-data" id="projectForm">
+        {% csrf_token %}
+        
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 1.5rem;">
+            
+            <!-- Main Content -->
+            <div>
+                <!-- Title -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label" for="title">Project Title *</label>
+                    <input type="text" 
+                           id="title" 
+                           name="title" 
+                           class="admin-form-input"
+                           value="{{ project.title|default:'' }}"
+                           placeholder="Enter project title"
+                           required
+                           style="font-size: 1.25rem; font-weight: 600;">
+                </div>
+                
+                <!-- Project Image -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label">Project Image</label>
+                    
+                    <!-- Image Preview -->
+                    <div id="imagePreview" style="margin-bottom: 1rem; {% if not project.image %}display: none;{% endif %}">
+                        <img id="previewImg" 
+                             src="{% if project.image %}{{ project.image.url }}{% endif %}" 
+                             style="width: 100%; height: 300px; object-fit: cover; border-radius: 0.5rem; border: 1px solid var(--admin-border-color);">
+                    </div>
+                    
+                    <!-- File Input -->
+                    <div style="display: flex; gap: 1rem;">
+                        <label for="image" class="admin-btn-secondary" style="cursor: pointer; margin: 0;">
+                            <i class="bi bi-image mr-2"></i>
+                            Choose Image
+                        </label>
+                        <input type="file" 
+                               id="image" 
+                               name="image" 
+                               accept="image/*"
+                               style="display: none;"
+                               onchange="previewImage(event)">
+                        
+                        {% if project.image %}
+                        <button type="button" onclick="removeImage()" class="admin-btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                        Recommended size: 1200x800px
+                    </p>
+                </div>
+                
+                <!-- Description with QuillJS -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label">Description *</label>
+                    
+                    <!-- Quill Editor -->
+                    <div id="quill-editor" style="min-height: 300px;">
+                        {{ project.description|default:""|safe }}
+                    </div>
+                    
+                    <!-- Hidden input to store content -->
+                    <input type="hidden" id="description" name="description" required>
+                </div>
+                
+                <!-- Tech Stack -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <label class="admin-form-label" for="tech_stack">Technology Stack *</label>
+                    <input type="text" 
+                           id="tech_stack" 
+                           name="tech_stack" 
+                           class="admin-form-input"
+                           value="{% if project.tech_stack %}{{ project.tech_stack|join:', ' }}{% endif %}"
+                           placeholder="e.g., Python, Django, React, PostgreSQL"
+                           required>
+                    <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                        Separate technologies with commas
+                    </p>
+                    
+                    <!-- Tech Preview -->
+                    <div id="techPreview" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div>
+                <!-- Project Settings -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+                        Project Settings
+                    </h3>
+                    
+                    <!-- Featured -->
+                    <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                        <input type="checkbox" 
+                               id="is_featured" 
+                               name="is_featured" 
+                               {% if project.is_featured %}checked{% endif %}
+                               style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                        <label for="is_featured" style="color: var(--admin-text-primary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                           <i class="bi bi-star-fill" style="color: var(--admin-accent-warning);"></i>
+                           Featured Project
+                        </label>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                        <input type="checkbox" 
+                               id="is_active" 
+                               name="is_active" 
+                               {% if project %}{% if project.is_active %}checked{% endif %}{% else %}checked{% endif %}
+                               style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                        <label for="is_active" style="color: var(--admin-text-primary); cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="bi bi-check-circle text-success"></i>
+                            Active Project
+                        </label>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <button type="submit" class="admin-btn-success" style="justify-content: center;">
+                            <i class="bi bi-check-lg mr-2"></i>
+                            {% if project %}Update{% else %}Create{% endif %} Project
+                        </button>
+                        
+                        {% if project %}
+                        <button type="button" onclick="deleteProject()" class="admin-btn-danger" style="justify-content: center;">
+                            <i class="bi bi-trash mr-2"></i>
+                            Delete Project
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Links -->
+                <div class="admin-card" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+                        Project Links
+                    </h3>
+                    
+                    <!-- GitHub Link -->
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="github_link">
+                            <i class="bi bi-github mr-1"></i>
+                            GitHub Repository
+                        </label>
+                        <input type="url" 
+                               id="github_link" 
+                               name="github_link" 
+                               class="admin-form-input"
+                               value="{{ project.github_link|default:'' }}"
+                               placeholder="https://github.com/username/repo">
+                    </div>
+                    
+                    <!-- Demo Link -->
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="demo_link">
+                            <i class="bi bi-box-arrow-up-right mr-1"></i>
+                            Live Demo URL
+                        </label>
+                        <input type="url" 
+                               id="demo_link" 
+                               name="demo_link" 
+                               class="admin-form-input"
+                               value="{{ project.demo_link|default:'' }}"
+                               placeholder="https://example.com">
+                    </div>
+                </div>
+                
+                <!-- Project Info -->
+                <div class="admin-card">
+                    <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+                        Information
+                    </h3>
+                    
+                    {% if project %}
+                    <div style="font-size: 0.875rem; color: var(--admin-text-secondary); display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div>
+                            <p style="color: var(--admin-text-muted); margin-bottom: 0.25rem;">Created</p>
+                            <p>{{ project.created_at|date:"F d, Y" }}</p>
+                        </div>
+                        <div style="border-top: 1px solid var(--admin-border-color); padding-top: 0.75rem;">
+                            <p style="color: var(--admin-text-muted); margin-bottom: 0.25rem;">Last Updated</p>
+                            <p>{{ project.updated_at|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="font-size: 0.875rem; color: var(--admin-text-muted);">
+                        Project information will be available after creation
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if project %}
+<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
+        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+            Confirm Delete
+        </h3>
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
+            Are you sure you want to delete this project? This action cannot be undone.
+        </p>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+                Cancel
+            </button>
+            <form method="POST" action="{% url 'admin_project_delete' project.id %}" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Quill Editor
+    var quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, 4, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Describe your project in detail...'
+    });
+    
+    // Form submission - save Quill content
+    document.getElementById('projectForm').addEventListener('submit', function(e) {
+        // Get Quill content
+        var content = quill.root.innerHTML;
+        document.getElementById('description').value = content;
+        
+        // Validate content
+        if (quill.getText().trim().length === 0) {
+            e.preventDefault();
+            alert('Please add a project description');
+            return false;
+        }
+    });
+    
+    // Image Preview
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function removeImage() {
+        document.getElementById('image').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+    }
+    
+    // Tech Stack Preview
+    const techInput = document.getElementById('tech_stack');
+    const techPreview = document.getElementById('techPreview');
+    
+    function updateTechPreview() {
+        const techs = techInput.value.split(',').map(tech => tech.trim()).filter(tech => tech);
+        techPreview.innerHTML = techs.map(tech => 
+            `<span class="admin-badge admin-badge-info">${tech}</span>`
+        ).join('');
+    }
+    
+    techInput.addEventListener('input', updateTechPreview);
+    updateTechPreview(); // Initial load
+    
+    // Delete Modal
+    function deleteProject() {
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+    
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+</script>
+{% endblock %}
