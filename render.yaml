@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: portfolio-cms
+    env: python
+    pythonVersion: 3.10.13
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn portfolio_project.wsgi:application
