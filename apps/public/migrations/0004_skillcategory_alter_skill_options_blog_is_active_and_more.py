@@ -77,6 +77,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='skill',
-            options={'ordering': ['category__name', '-proficiency']},
+            options={'ordering': ['-proficiency']},
         ),
     ]

@@ -161,7 +161,7 @@
                        style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
             </div>
         </div>
-        
+
         <!-- Action Buttons -->
         <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-bottom: 2rem;">
             <a href="{% url 'admin_dashboard' %}" class="admin-btn-secondary">
@@ -174,6 +174,165 @@
         </div>
     </form>
     
+    <!-- Manage Research Content -->
+    <div class="admin-card" style="margin-bottom: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h2 style="font-size:1.5rem; font-weight:600; color:var(--admin-text-primary);">
+                <i class="bi bi-journals mr-2"></i>
+                Research & Articles
+            </h2>
+            <div style="display:flex; gap:0.5rem;">
+                <button onclick="openResearchCategoryModal('add')" class="admin-btn-secondary" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
+                    <i class="bi bi-plus-lg mr-1"></i>
+                    Add Category
+                </button>
+                <button onclick="openResearchEntryModal('add')" class="admin-btn-primary" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
+                    <i class="bi bi-plus-lg mr-1"></i>
+                    Add Entry
+                </button>
+            </div>
+        </div>
+        <div class="admin-card" style="padding:1rem; background:var(--admin-bg-secondary); border:none;">
+            <h3 style="font-weight:600; margin-bottom:0.75rem;">Categories</h3>
+            {% if research_categories %}
+            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                {% for cat in research_categories %}
+                <div class="admin-card" style="padding:0.75rem 1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h4 style="margin:0;">{{ cat.name }}</h4>
+                            <p style="margin:0; font-size:0.8rem; color:var(--admin-text-muted);">{{ cat.description }}</p>
+                        </div>
+                        <span class="admin-badge {% if cat.is_active %}admin-badge-success{% else %}admin-badge-warning{% endif %}">
+                            {% if cat.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:0.5rem;">
+                        <button type="button" class="admin-btn-secondary" onclick="openResearchCategoryModal('edit', '{{ cat.id_str }}', '{{ cat.name|escapejs }}', '{{ cat.description|escapejs }}', {{ cat.order }}, {{ cat.is_active|yesno:'true,false' }})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="post" action="{% url 'admin_research_category_toggle_active' cat.id_str %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="admin-btn-secondary" style="padding:0.35rem 0.85rem;">
+                                {% if cat.is_active %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                        <button type="button" class="admin-btn-danger" onclick="confirmResearchCategoryDelete('{{ cat.id_str }}', '{{ cat.name|escapejs }}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-secondary">No research categories yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="admin-card" style="padding:1rem; background:var(--admin-bg-secondary); border:none;" id="research-entries-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <h3 style="font-weight:600; margin:0;">Entries</h3>
+                <div style="display:flex; gap:0.5rem;">
+                    <button onclick="openResearchEntryModal('add')" class="admin-btn-primary" style="padding:0.35rem 0.75rem; font-size:0.85rem;">
+                        <i class="bi bi-plus-lg"></i>
+                        Add Entry
+                    </button>
+                </div>
+            </div>
+            <form id="researchFilterForm" method="get" style="display:flex; gap:0.75rem; align-items:flex-end; margin-bottom:1rem; flex-wrap:wrap;">
+                <div class="admin-form-group" style="flex:1; min-width:180px;">
+                    <label class="admin-form-label" for="research_category">Category</label>
+                    <select name="research_category" id="research_category" class="admin-form-select">
+                        <option value="">All categories</option>
+                        {% for cat in research_categories %}
+                        <option value="{{ cat.id_str }}" {% if research_category_filter == cat.id_str %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="admin-form-group" style="flex:1; min-width:180px;">
+                    <label class="admin-form-label" for="research_search">Search</label>
+                    <input type="text" name="research_search" value="{{ research_search }}" id="research_search" class="admin-form-input" placeholder="Keyword">
+                </div>
+                <button type="submit" class="admin-btn-secondary" style="align-self:flex-end;">
+                    Apply
+                </button>
+            </form>
+            {% if research_entries %}
+            <div class="admin-table" style="max-height:320px; overflow:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Publication</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in research_entries %}
+                        <tr>
+                            <td>
+                                <strong>{{ entry.title }}</strong>
+                                <p style="font-size:0.75rem; color:var(--admin-text-muted); margin:0;">{{ entry.description|truncatewords:15 }}</p>
+                            </td>
+                            <td>
+                                {% if entry.category %}
+                                {{ entry.category.name }}
+                                {% else %}
+                                Uncategorized
+                                {% endif %}
+                            </td>
+                    <td>{{ entry.publication }}</td>
+                    <td>
+                        <span class="admin-badge {% if entry.is_active %}admin-badge-success{% else %}admin-badge-warning{% endif %}">
+                            {% if entry.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex; justify-content:flex-end; gap:0.25rem;">
+                            <form method="post" action="{% url 'admin_research_entry_toggle_active' entry.id_str %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="admin-btn-secondary" style="padding:0.35rem 0.85rem;">
+                                    {% if entry.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                            {% with entry.category.id_str|default:'' as entry_cat_id %}
+                            <button type="button" class="admin-btn-secondary" onclick="editResearchEntry('{{ entry.id_str }}', '{{ entry.title|escapejs }}', '{{ entry.description|escapejs }}', '{{ entry.publication|escapejs }}', '{{ entry.link|escapejs }}', '{{ entry_cat_id }}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            {% endwith %}
+                            <button type="button" class="admin-btn-danger" onclick="confirmResearchEntryDelete('{{ entry.id_str }}', '{{ entry.title|escapejs }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-secondary">No research entries yet.</p>
+            {% endif %}
+            {% if research_paginator.num_pages > 1 %}
+            <div class="flex justify-between items-center mt-4">
+                <div class="text-xs text-muted">
+                    Page {{ research_entries.number }} of {{ research_paginator.num_pages }}
+                </div>
+                <div class="flex gap-2">
+                    {% if research_entries.has_previous %}
+                    <a href="?research_page={{ research_entries.previous_page_number }}&research_category={{ research_category_filter }}&research_search={{ research_search }}" class="admin-btn-secondary" style="padding:0.35rem 0.85rem;">Prev</a>
+                    {% endif %}
+                    {% if research_entries.has_next %}
+                    <a href="?research_page={{ research_entries.next_page_number }}&research_category={{ research_category_filter }}&research_search={{ research_search }}" class="admin-btn-secondary" style="padding:0.35rem 0.85rem;">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Manage Education Entries -->
     <div class="admin-card" style="margin-bottom: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -196,6 +355,7 @@
                         <th>Degree</th>
                         <th>Institution</th>
                         <th>Year</th>
+                        <th>Status</th>
                         <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
@@ -210,13 +370,28 @@
                         <td>{{ edu.institution }}</td>
                         <td>{{ edu.year }}</td>
                         <td>
+                            {% if edu.is_active %}
+                            <span class="admin-badge admin-badge-success">Active</span>
+                            {% else %}
+                            <span class="admin-badge admin-badge-warning">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
                             <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                                <button onclick="editEducation({{ edu.id }}, '{{ edu.degree|escapejs }}', '{{ edu.institution|escapejs }}', '{{ edu.year }}', '{{ edu.description|escapejs }}', {{ edu.order }})" 
+                                <button onclick="editEducation('{{ edu.id_str }}', '{{ edu.degree|escapejs }}', '{{ edu.institution|escapejs }}', '{{ edu.year }}', '{{ edu.description|escapejs }}', {{ edu.order }})" 
                                         class="admin-btn-secondary" 
                                         style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button onclick="deleteEducation({{ edu.id }}, '{{ edu.degree|escapejs }}')" 
+                                <form method="post" action="{% url 'admin_education_toggle_active' edu.id_str %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="admin-btn-secondary"
+                                            style="padding: 0.35rem 0.75rem; font-size: 0.75rem;">
+                                        {% if edu.is_active %}Deactivate{% else %}Activate{% endif %}
+                                    </button>
+                                </form>
+                                <button onclick="deleteEducation('{{ edu.id_str }}', '{{ edu.degree|escapejs }}')" 
                                         class="admin-btn-danger" 
                                         style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                                     <i class="bi bi-trash"></i>
@@ -252,17 +427,30 @@
         {% if interests_list %}
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
             {% for interest in interests_list %}
-            <div style="background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; padding: 1.5rem; text-align: center;">
+            <div style="background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; padding: 1.5rem; text-align: center; position: relative;">
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem;">
+                    {% if interest.is_active %}
+                    <span class="admin-badge admin-badge-success">Active</span>
+                    {% else %}
+                    <span class="admin-badge admin-badge-warning">Inactive</span>
+                    {% endif %}
+                </div>
                 <i class="bi bi-{{ interest.icon }}" style="font-size: 2.5rem; color: var(--admin-accent-{{ interest.color }}); margin-bottom: 1rem;"></i>
                 <h3 style="font-weight: 600; margin-bottom: 0.5rem;">{{ interest.title }}</h3>
                 <p style="font-size: 0.875rem; color: var(--admin-text-muted); margin-bottom: 1rem;">{{ interest.description }}</p>
                 <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                    <button onclick="editInterest({{ interest.id }}, '{{ interest.title|escapejs }}', '{{ interest.description|escapejs }}', '{{ interest.icon }}', '{{ interest.color }}', {{ interest.order }})" 
+                    <button onclick="editInterest('{{ interest.id_str }}', '{{ interest.title|escapejs }}', '{{ interest.description|escapejs }}', '{{ interest.icon }}', '{{ interest.color }}', {{ interest.order }})" 
                             class="admin-btn-secondary" 
                             style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button onclick="deleteInterest({{ interest.id }}, '{{ interest.title|escapejs }}')" 
+                    <form method="post" action="{% url 'admin_interest_toggle_active' interest.id_str %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="admin-btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.875rem;">
+                            {% if interest.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                    <button onclick="deleteInterest('{{ interest.id_str }}', '{{ interest.title|escapejs }}')" 
                             class="admin-btn-danger" 
                             style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                         <i class="bi bi-trash"></i>
@@ -295,19 +483,32 @@
         {% if values_list %}
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
             {% for value in values_list %}
-            <div style="background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; padding: 1.5rem; text-align: center;">
+            <div style="background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; padding: 1.5rem; text-align: center; position: relative;">
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem;">
+                    {% if value.is_active %}
+                    <span class="admin-badge admin-badge-success">Active</span>
+                    {% else %}
+                    <span class="admin-badge admin-badge-warning">Inactive</span>
+                    {% endif %}
+                </div>
                 <div style="width: 60px; height: 60px; background: rgba(92, 124, 250, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                     <i class="bi bi-{{ value.icon }}" style="font-size: 1.75rem; color: var(--admin-accent-{{ value.color }});"></i>
                 </div>
                 <h3 style="font-weight: 600; margin-bottom: 0.5rem;">{{ value.title }}</h3>
                 <p style="font-size: 0.875rem; color: var(--admin-text-muted); margin-bottom: 1rem;">{{ value.description|truncatewords:20 }}</p>
                 <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                    <button onclick="editValue({{ value.id }}, '{{ value.title|escapejs }}', '{{ value.description|escapejs }}', '{{ value.icon }}', '{{ value.color }}', {{ value.order }})" 
+                    <button onclick="editValue('{{ value.id_str }}', '{{ value.title|escapejs }}', '{{ value.description|escapejs }}', '{{ value.icon }}', '{{ value.color }}', {{ value.order }})" 
                             class="admin-btn-secondary" 
                             style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button onclick="deleteValue({{ value.id }}, '{{ value.title|escapejs }}')" 
+                    <form method="post" action="{% url 'admin_value_toggle_active' value.id_str %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="admin-btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.875rem;">
+                            {% if value.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                    <button onclick="deleteValue('{{ value.id_str }}', '{{ value.title|escapejs }}')" 
                             class="admin-btn-danger" 
                             style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                         <i class="bi bi-trash"></i>
@@ -315,6 +516,7 @@
                 </div>
             </div>
             {% endfor %}
+
         </div>
         {% else %}
         <div style="text-align: center; padding: 3rem; color: var(--admin-text-muted);">
@@ -393,10 +595,13 @@
                 <input type="text" name="description" id="int_description" class="admin-form-input" required>
             </div>
             
-            <div class="admin-form-group">
-                <label class="admin-form-label">Bootstrap Icon Name</label>
-                <input type="text" name="icon" id="int_icon" class="admin-form-input" placeholder="graph-up" required>
-            </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Bootstrap Icon Name</label>
+                    <input type="text" name="icon" id="int_icon" class="admin-form-input" placeholder="graph-up" required>
+                    <p class="text-sm text-muted mt-1">
+                        Find icons at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener" class="text-accent-primary hover:underline">icons.getbootstrap.com</a>
+                    </p>
+                </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Color</label>
@@ -446,10 +651,13 @@
                 <textarea name="description" id="val_description" class="admin-form-textarea" rows="3" required></textarea>
             </div>
             
-            <div class="admin-form-group">
-                <label class="admin-form-label">Bootstrap Icon Name</label>
-                <input type="text" name="icon" id="val_icon" class="admin-form-input" placeholder="trophy" required>
-            </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Bootstrap Icon Name</label>
+                    <input type="text" name="icon" id="val_icon" class="admin-form-input" placeholder="trophy" required>
+                    <p class="text-sm text-muted mt-1">
+                        Find icons at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener" class="text-accent-primary hover:underline">icons.getbootstrap.com</a>
+                    </p>
+                </div>
             
             <div class="admin-form-group">
                 <label class="admin-form-label">Color</label>
@@ -476,6 +684,109 @@
                 </button>
             </div>
         </form>
+</div>
+</div>
+
+<!-- Research Category Modal -->
+<div id="researchCategoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:520px; margin:2rem; width:100%;">
+        <h3 id="researchCategoryModalTitle" style="font-weight:600; margin-bottom:1.25rem; color:var(--admin-text-primary);">
+            Add Research Category
+        </h3>
+        <form id="researchCategoryForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="category_id" id="research_category_id">
+            <div class="admin-form-group">
+                <label class="admin-form-label">Name</label>
+                <input type="text" name="name" id="research_category_name" class="admin-form-input" required>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <textarea name="description" id="research_category_description" class="admin-form-textarea" rows="3"></textarea>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Order</label>
+                <input type="number" name="order" id="research_category_order" class="admin-form-input" value="0">
+            </div>
+            <div class="admin-form-group" style="display:flex; align-items:center; gap:0.5rem;">
+                <input type="checkbox" name="is_active" id="research_category_active" checked style="width:1.25rem; height:1.25rem; cursor:pointer;">
+                <label for="research_category_active" style="margin:0; cursor:pointer; color:var(--admin-text-primary);">Active</label>
+            </div>
+            <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" onclick="closeResearchCategoryModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+                <button type="submit" class="admin-btn-success" style="flex:1; justify-content:center;">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Research Entry Modal -->
+<div id="researchEntryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:600px; margin:2rem; width:100%;">
+        <h3 id="researchEntryModalTitle" style="font-weight:600; margin-bottom:1.25rem; color:var(--admin-text-primary);">
+            Add Research Entry
+        </h3>
+        <form id="researchEntryForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="entry_id" id="research_entry_id">
+            <div class="admin-form-group">
+                <label class="admin-form-label">Title</label>
+                <input type="text" name="title" id="research_entry_title" class="admin-form-input" required>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <textarea name="description" id="research_entry_description" class="admin-form-textarea" rows="3"></textarea>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Publication</label>
+                <input type="text" name="publication" id="research_entry_publication" class="admin-form-input">
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Link</label>
+                <input type="url" name="link" id="research_entry_link" class="admin-form-input" placeholder="https://...">
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Category</label>
+                <select name="category_id" id="research_entry_category" class="admin-form-select" required>
+                    <option value="">Select category</option>
+                    {% for cat in research_categories %}
+                    <option value="{{ cat.id_str }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" onclick="closeResearchEntryModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+                <button type="submit" class="admin-btn-success" style="flex:1; justify-content:center;">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Research Delete Modals -->
+<div id="researchCategoryDeleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:420px; margin:2rem;">
+        <h3 style="font-weight:600; margin-bottom:1rem; color:var(--admin-text-primary);">Delete Research Category</h3>
+        <p style="color:var(--admin-text-secondary); margin-bottom:1.5rem;">Delete "<span id="deleteResearchCategoryName"></span>"?</p>
+        <div style="display:flex; gap:0.75rem;">
+            <button type="button" onclick="closeResearchCategoryDeleteModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+            <form id="researchCategoryDeleteForm" method="POST" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width:100%; justify-content:center;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+<div id="researchEntryDeleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:420px; margin:2rem;">
+        <h3 style="font-weight:600; margin-bottom:1rem; color:var(--admin-text-primary);">Delete Research Entry</h3>
+        <p style="color:var(--admin-text-secondary); margin-bottom:1.5rem;">Delete "<span id="deleteResearchEntryName"></span>"?</p>
+        <div style="display:flex; gap:0.75rem;">
+            <button type="button" onclick="closeResearchEntryDeleteModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+            <form id="researchEntryDeleteForm" method="POST" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width:100%; justify-content:center;">Delete</button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -616,5 +927,105 @@
     function closeDeleteModal() {
         document.getElementById('deleteModal').style.display = 'none';
     }
-</script>
+
+    function openResearchCategoryModal(mode, id='', name='', description='', order=0, isActive='true') {
+        document.getElementById('researchCategoryModalTitle').textContent = mode === 'edit' ? 'Edit Research Category' : 'Add Research Category';
+        document.getElementById('research_category_id').value = mode === 'edit' ? id : '';
+        document.getElementById('research_category_name').value = name;
+        document.getElementById('research_category_description').value = description;
+        document.getElementById('research_category_order').value = order;
+        document.getElementById('research_category_active').checked = String(isActive) === 'true';
+        document.getElementById('researchCategoryForm').action = mode === 'edit' ? `/admin/pages/about/research-categories/${id}/edit/` : '{% url "admin_research_category_create" %}';
+        document.getElementById('researchCategoryModal').style.display = 'flex';
+    }
+
+    function closeResearchCategoryModal() {
+        document.getElementById('researchCategoryForm').reset();
+        document.getElementById('research_category_id').value = '';
+        document.getElementById('researchCategoryModal').style.display = 'none';
+    }
+
+    function confirmResearchCategoryDelete(id, name) {
+        document.getElementById('deleteResearchCategoryName').textContent = name;
+        document.getElementById('researchCategoryDeleteForm').action = `/admin/pages/about/research-categories/${id}/delete/`;
+        document.getElementById('researchCategoryDeleteModal').style.display = 'flex';
+    }
+
+    function closeResearchCategoryDeleteModal() {
+        document.getElementById('researchCategoryDeleteModal').style.display = 'none';
+    }
+
+    function openResearchEntryModal(mode, id='', title='', description='', publication='', link='', category='') {
+        document.getElementById('researchEntryModalTitle').textContent = mode === 'edit' ? 'Edit Research Entry' : 'Add Research Entry';
+        document.getElementById('research_entry_id').value = mode === 'edit' ? id : '';
+        document.getElementById('research_entry_title').value = title;
+        document.getElementById('research_entry_description').value = description;
+        document.getElementById('research_entry_publication').value = publication;
+        document.getElementById('research_entry_link').value = link;
+        document.getElementById('research_entry_category').value = category || '';
+        document.getElementById('researchEntryForm').action = mode === 'edit' ? `/admin/pages/about/research-entries/${id}/edit/` : '{% url "admin_research_entry_create" %}';
+        document.getElementById('researchEntryModal').style.display = 'flex';
+    }
+
+    function closeResearchEntryModal() {
+        document.getElementById('researchEntryForm').reset();
+        document.getElementById('research_entry_id').value = '';
+        document.getElementById('researchEntryModal').style.display = 'none';
+    }
+
+    function editResearchEntry(id, title, description, publication, link, category) {
+        openResearchEntryModal('edit', id, title, description, publication, link, category);
+    }
+
+    function confirmResearchEntryDelete(id, name) {
+        document.getElementById('deleteResearchEntryName').textContent = name;
+        document.getElementById('researchEntryDeleteForm').action = `/admin/pages/about/research-entries/${id}/delete/`;
+        document.getElementById('researchEntryDeleteModal').style.display = 'flex';
+    }
+
+                function closeResearchEntryDeleteModal() {
+                    document.getElementById('researchEntryDeleteModal').style.display = 'none';
+                }
+
+                const researchEntriesSection = document.getElementById('research-entries-section');
+
+                async function handleResearchFilterSubmit(event) {
+                    event.preventDefault();
+                    const form = event.currentTarget;
+                    const params = new URLSearchParams(new FormData(form));
+                    const url = `${window.location.pathname}?${params.toString()}`;
+                    try {
+                        const response = await fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        if (!response.ok) {
+                            throw new Error('Unable to load research entries.');
+                        }
+                        const text = await response.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+                        const newSection = doc.getElementById('research-entries-section');
+                        if (newSection && researchEntriesSection) {
+                            researchEntriesSection.innerHTML = newSection.innerHTML;
+                            attachResearchFilterHandler();
+                        }
+                        window.history.replaceState(null, '', url);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+
+                function attachResearchFilterHandler() {
+                    const form = document.getElementById('researchFilterForm');
+                    if (!form || form.dataset.researchListenerAttached === 'true') {
+                        return;
+                    }
+                    form.dataset.researchListenerAttached = 'true';
+                    form.addEventListener('submit', handleResearchFilterSubmit);
+                }
+
+                attachResearchFilterHandler();
+            </script>
 {% endblock %}

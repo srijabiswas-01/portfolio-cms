@@ -40,16 +40,15 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-2xl font-bold text-accent-primary">{{ skill.proficiency }}%</p>
+                            <p class="text-2xl font-bold text-accent-primary" style="min-width: 2.5rem;">
+                                {{ skill.display_proficiency|default:0 }}%
+                            </p>
                         </div>
                     </div>
-
                     <!-- Progress Bar -->
-                    <div class="relative">
-                        <div class="h-2 bg-secondary rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full transition-all duration-1000 ease-out"
-                                 style="width: {{ skill.proficiency }}%">
-                            </div>
+
+                    <div style="height: 10px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow: hidden;">
+                        <div style="height: 100%; width: {{ skill.display_proficiency|default:0 }}%; background: linear-gradient(90deg, #4fc3ff, #1a9af9); transition: width 0.5s ease;">
                         </div>
                     </div>
                 </div>
@@ -63,6 +62,7 @@
         </div>
         {% endfor %}
 
+        {% if show_skills_summary %}
         <!-- Skills Overview Stats -->
         <div class="mt-20 bg-secondary rounded-2xl p-12">
             <div class="text-center mb-12">
@@ -70,45 +70,33 @@
                 <p class="text-secondary">Quick overview of my expertise areas</p>
             </div>
 
+            {% if skill_summaries %}
             <div class="grid md:grid-cols-4 gap-8">
+                {% for summary in skill_summaries %}
                 <div class="text-center">
-                    <div class="w-20 h-20 bg-accent-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="bi bi-code-slash text-3xl text-accent-primary"></i>
+                    <div class="w-20 h-20 bg-accent-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="{{ summary.icon }} text-3xl text-accent-primary"></i>
                     </div>
-                    <h3 class="text-4xl font-bold text-accent-primary mb-2">5+</h3>
-                    <p class="text-muted">Programming Languages</p>
+                    <h3 class="text-4xl font-bold text-accent-primary mb-2">
+                        {{ summary.display }}
+                    </h3>
+                    <p class="text-muted">{{ summary.name }}</p>
                 </div>
-
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-accent-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="bi bi-graph-up text-3xl text-accent-secondary"></i>
-                    </div>
-                    <h3 class="text-4xl font-bold text-accent-secondary mb-2">10+</h3>
-                    <p class="text-muted">Data Science Tools</p>
-                </div>
-
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-accent-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="bi bi-window text-3xl text-accent-success"></i>
-                    </div>
-                    <h3 class="text-4xl font-bold text-accent-success mb-2">8+</h3>
-                    <p class="text-muted">Web Technologies</p>
-                </div>
-
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-accent-warning/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="bi bi-gear text-3xl text-accent-warning"></i>
-                    </div>
-                    <h3 class="text-4xl font-bold text-accent-warning mb-2">15+</h3>
-                    <p class="text-muted">Tools & Frameworks</p>
-                </div>
+                {% endfor %}
             </div>
+            {% else %}
+            <div class="text-center">
+                <p class="text-secondary">Add categories and skills in the admin panel to generate summary cards.</p>
+            </div>
+            {% endif %}
         </div>
+        {% endif %}
 
+        {% if show_cta_section %}
         <!-- Call to Action -->
         <div class="mt-20 text-center">
-            <h2 class="text-3xl font-bold font-poppins mb-4">Interested in Working Together?</h2>
-            <p class="text-secondary mb-8">Let's create something amazing</p>
+            <h2 class="text-3xl font-bold font-poppins mb-4">{{ cta_title }}</h2>
+            <p class="text-secondary mb-8">{{ cta_description }}</p>
             <div class="flex justify-center gap-4">
                 <a href="{% url 'projects' %}" class="btn-secondary">
                     <i class="bi bi-folder mr-2"></i>
@@ -116,10 +104,11 @@
                 </a>
                 <a href="{% url 'contact' %}" class="btn-primary">
                     <i class="bi bi-envelope mr-2"></i>
-                    Get In Touch
+                    {{ cta_button_text }}
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </section>
 

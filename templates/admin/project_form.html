@@ -229,7 +229,7 @@
             <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
                 Cancel
             </button>
-            <form method="POST" action="{% url 'admin_project_delete' project.id %}" style="flex: 1;">
+            <form method="POST" action="{% url 'admin_project_delete' project.id_str %}" style="flex: 1;">
                 {% csrf_token %}
                 <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
                     Delete

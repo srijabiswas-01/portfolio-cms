@@ -104,7 +104,7 @@
 
                     <!-- Title -->
                     <h3 class="text-xl font-bold font-poppins mb-3 group-hover:text-accent-primary transition-colors line-clamp-2">
-                        <a href="{% url 'blog_detail' blog.id %}">
+                        <a href="{% url 'blog_detail' blog.id_str %}">
                             {{ blog.title }}
                         </a>
                     </h3>
@@ -127,7 +127,7 @@
                     </div>
 
                     <!-- Read More Link -->
-                    <a href="{% url 'blog_detail' blog.id %}" 
+                        <a href="{% url 'blog_detail' blog.id_str %}" 
                        class="inline-flex items-center text-accent-primary font-medium hover:text-accent-secondary transition-colors group">
                         Read More 
                         <i class="bi bi-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>

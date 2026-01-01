@@ -45,17 +45,17 @@
             </div>
             
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button onclick="editSkill({{ skill.id }}, '{{ skill.name|escapejs }}', '{{ skill.category_id|default:'' }}', {{ skill.proficiency }}, '{{ skill.icon }}', {{ skill.is_active|yesno:'true,false' }})" 
+                <button onclick="editSkill('{{ skill.id_str }}', '{{ skill.name|escapejs }}', '{{ skill.category.id_str|default:'' }}', {{ skill.proficiency }}, '{{ skill.icon }}', {{ skill.is_active|yesno:'true,false' }})" 
                         class="admin-btn-secondary" 
                         style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button onclick="deleteSkill({{ skill.id }}, '{{ skill.name|escapejs }}')" 
+                <button onclick="deleteSkill('{{ skill.id_str }}', '{{ skill.name|escapejs }}')" 
                         class="admin-btn-danger" 
                         style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                     <i class="bi bi-trash"></i>
                 </button>
-                <form method="POST" action="{% url 'admin_skill_toggle_active' skill.id %}" style="display: inline;">
+                <form method="POST" action="{% url 'admin_skill_toggle_active' skill.id_str %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit"
                             class="admin-btn-secondary"
@@ -107,71 +107,13 @@
                 Define categories that control which skills are visible on the public site.
             </p>
         </div>
-        <button type="button" class="admin-btn-secondary" onclick="resetCategoryForm()">
+        <button type="button" class="admin-btn-secondary" onclick="openCategoryModal('add')">
             <i class="bi bi-plus-lg mr-1"></i>
             New Category
         </button>
     </div>
 
-    <form id="categoryForm" method="POST" action="{% url 'admin_skill_category_manage' %}">
-        {% csrf_token %}
-        <input type="hidden" name="category_id" id="category_id">
-        <h3 id="categoryFormTitle" style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
-            Add New Category
-        </h3>
-
-        <div class="admin-form-group">
-            <label class="admin-form-label" for="category_name">Category Name *</label>
-            <input type="text"
-                   id="category_name"
-                   name="name"
-                   class="admin-form-input"
-                   placeholder="e.g., Data Science"
-                   required>
-        </div>
-
-        <div class="admin-form-group">
-            <label class="admin-form-label" for="category_description">Description</label>
-            <textarea id="category_description"
-                      name="description"
-                      class="admin-form-textarea"
-                      rows="2"
-                      placeholder="Optional short description"></textarea>
-        </div>
-
-        <div class="admin-form-group">
-            <label class="admin-form-label" for="category_order">Display Order</label>
-            <input type="number"
-                   id="category_order"
-                   name="order"
-                   class="admin-form-input"
-                   value="0"
-                   min="0">
-        </div>
-
-        <div class="admin-form-group" style="display: flex; align-items: center; gap: 0.5rem;">
-            <input type="checkbox"
-                   id="category_active"
-                   name="is_active"
-                   checked
-                   style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
-            <label for="category_active" style="margin: 0; cursor: pointer; color: var(--admin-text-primary);">
-                Keep category active
-            </label>
-        </div>
-
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-            <button type="submit" class="admin-btn-success" style="display: flex; align-items: center; gap: 0.5rem;">
-                <i class="bi bi-check-lg"></i>
-                Save Category
-            </button>
-            <button type="button" class="admin-btn-secondary" onclick="resetCategoryForm()">
-                Reset
-            </button>
-        </div>
-    </form>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem;">
         {% for category in categories %}
         <div class="admin-card" style="padding: 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -195,21 +137,18 @@
             <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
                 <button type="button"
                         class="admin-btn-secondary"
-                        onclick="prefillCategoryForm({{ category.id }}, '{{ category.name|escapejs }}', '{{ category.description|escapejs }}', {{ category.order }}, {{ category.is_active|yesno:'true,false' }})">
+                        onclick="openCategoryModal('edit', '{{ category.id_str }}', '{{ category.name|escapejs }}', '{{ category.description|escapejs }}', {{ category.order }}, {{ category.is_active|yesno:'true,false' }})">
                     Edit
                 </button>
-                <form method="POST" action="{% url 'admin_skill_category_toggle_active' category.id %}">
+                <form method="POST" action="{% url 'admin_skill_category_toggle_active' category.id_str %}">
                     {% csrf_token %}
                     <button type="submit" class="admin-btn-secondary">
                         {% if category.is_active %}Deactivate{% else %}Activate{% endif %}
                     </button>
                 </form>
-                <form method="POST" action="{% url 'admin_skill_category_delete' category.id %}" onsubmit="return confirm('Delete category {{ category.name }}? Skills will be uncategorized.');">
-                    {% csrf_token %}
-                    <button type="submit" class="admin-btn-danger">
-                        Delete
-                    </button>
-                </form>
+                <button type="button" class="admin-btn-danger" onclick="confirmCategoryDelete('{{ category.id_str }}', '{{ category.name|escapejs }}')">
+                    Delete
+                </button>
             </div>
         </div>
         {% endfor %}
@@ -244,7 +183,7 @@
                 <select id="category" name="category_id" class="admin-form-select" required>
                     <option value="">Select category</option>
                     {% for category in categories %}
-                    <option value="{{ category.id }}">{{ category.name }}</option>
+                        <option value="{{ category.id_str }}">{{ category.name }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -267,17 +206,17 @@
                 </div>
                 
                 <!-- Icon -->
-                <div class="admin-form-group">
-                    <label class="admin-form-label" for="icon">Bootstrap Icon Name</label>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="icon">Bootstrap Icon Name</label>
                 <input type="text" 
                        id="icon" 
                        name="icon" 
                        class="admin-form-input"
                        placeholder="e.g., code-slash">
-                <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
-                    Find icons at <a href="https://icons.getbootstrap.com" target="_blank" style="color: var(--admin-accent-primary);">icons.getbootstrap.com</a>
+                <p class="text-sm text-muted mt-1">
+                    Find icons at <a href="https://icons.getbootstrap.com" target="_blank" rel="noopener" class="text-accent-primary hover:underline">icons.getbootstrap.com</a>
                 </p>
-                </div>
+            </div>
                 
                 <div class="admin-form-group" style="display: flex; align-items: center; gap: 0.5rem;">
                     <input type="checkbox"
@@ -327,9 +266,74 @@
     </div>
 </div>
 
+<!-- Category Modal -->
+<div id="categoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:520px; width:100%; margin:2rem;">
+        <h3 id="categoryModalTitle" style="font-weight:600; margin-bottom:1.25rem; color:var(--admin-text-primary);">
+            Add New Category
+        </h3>
+        <form id="categoryModalForm" method="POST" action="{% url 'admin_skill_category_manage' %}">
+            {% csrf_token %}
+            <input type="hidden" name="category_id" id="category_modal_id">
+
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="category_modal_name">Category Name *</label>
+                <input type="text" id="category_modal_name" name="name" class="admin-form-input" placeholder="e.g., Data Science" required>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="category_modal_description">Description</label>
+                <textarea id="category_modal_description" name="description" class="admin-form-textarea" rows="2" placeholder="Optional short description"></textarea>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="category_modal_order">Display Order</label>
+                <input type="number" id="category_modal_order" name="order" class="admin-form-input" value="0" min="0">
+            </div>
+
+            <div class="admin-form-group" style="display:flex; align-items:center; gap:0.5rem;">
+                <input type="checkbox" id="category_modal_active" name="is_active" checked style="width:1.25rem; height:1.25rem; cursor:pointer;">
+                <label for="category_modal_active" style="margin:0; cursor:pointer; color:var(--admin-text-primary);">
+                    Keep category active
+                </label>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap;">
+                <button type="submit" class="admin-btn-success" style="flex:1; justify-content:center;">
+                    <i class="bi bi-check-lg mr-2"></i>
+                    Save Category
+                </button>
+                <button type="button" class="admin-btn-secondary" onclick="closeCategoryModal()" style="flex:1; justify-content:center;">
+                    Cancel
+                </button>
+            </div>
+        </form>
+</div>
+</div>
+
+<!-- Category Delete Modal -->
+<div id="categoryDeleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:420px; margin:2rem;">
+        <h3 style="font-weight:600; margin-bottom:1rem; color:var(--admin-text-primary);">Delete Category</h3>
+        <p style="color:var(--admin-text-secondary); margin-bottom:1.5rem;">
+            Are you sure you want to delete "<span id="deleteCategoryName"></span>"? Skills will be uncategorized.
+        </p>
+        <div style="display:flex; gap:0.75rem;">
+            <button type="button" onclick="closeCategoryDeleteModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+            <form id="categoryDeleteForm" method="POST" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn-danger" style="width:100%; justify-content:center;">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     const skillModal = document.getElementById('skillModal');
-    const categoryForm = document.getElementById('categoryForm');
+    const categoryModal = document.getElementById('categoryModal');
+    const categoryModalForm = document.getElementById('categoryModalForm');
+    const categoryDeleteModal = document.getElementById('categoryDeleteModal');
+    const categoryDeleteForm = document.getElementById('categoryDeleteForm');
 
     function openAddModal() {
         document.getElementById('modalTitle').textContent = 'Add New Skill';
@@ -368,20 +372,32 @@
         document.getElementById('deleteModal').style.display = 'none';
     }
 
-    function prefillCategoryForm(id, name, description, order, isActive) {
-        document.getElementById('category_id').value = id;
-        document.getElementById('category_name').value = name;
-        document.getElementById('category_description').value = description;
-        document.getElementById('category_order').value = order;
-        document.getElementById('category_active').checked = String(isActive) === 'true';
-        document.getElementById('categoryFormTitle').textContent = 'Update Category';
+    function openCategoryModal(mode, id = '', name = '', description = '', order = 0, isActive = 'true') {
+        document.getElementById('category_modal_id').value = mode === 'edit' ? id : '';
+        document.getElementById('category_modal_name').value = name;
+        document.getElementById('category_modal_description').value = description;
+        document.getElementById('category_modal_order').value = order;
+        document.getElementById('category_modal_active').checked = String(isActive) === 'true';
+        document.getElementById('categoryModalTitle').textContent = mode === 'edit' ? 'Update Category' : 'Add New Category';
+        categoryModal.style.display = 'flex';
     }
 
-    function resetCategoryForm() {
-        categoryForm.reset();
-        document.getElementById('category_id').value = '';
-        document.getElementById('category_active').checked = true;
-        document.getElementById('categoryFormTitle').textContent = 'Add New Category';
+    function closeCategoryModal() {
+        categoryModalForm.reset();
+        document.getElementById('category_modal_id').value = '';
+        document.getElementById('category_modal_active').checked = true;
+        document.getElementById('categoryModalTitle').textContent = 'Add New Category';
+        categoryModal.style.display = 'none';
+    }
+
+    function confirmCategoryDelete(id, name) {
+        document.getElementById('deleteCategoryName').textContent = name;
+        categoryDeleteForm.action = `/admin/skills/categories/${id}/delete/`;
+        categoryDeleteModal.style.display = 'flex';
+    }
+
+    function closeCategoryDeleteModal() {
+        categoryDeleteModal.style.display = 'none';
     }
 </script>
 {% endblock %}

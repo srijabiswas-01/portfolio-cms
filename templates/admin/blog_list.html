@@ -102,20 +102,20 @@
                 <td>
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                         {% if blog.status == 'published' %}
-                        <a href="{% url 'blog_detail' blog.id %}" target="_blank" 
+                        <a href="{% url 'blog_detail' blog.id_str %}" target="_blank" 
                            class="admin-btn-secondary" 
                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
                            title="View">
                             <i class="bi bi-eye"></i>
                         </a>
                         {% endif %}
-                        <a href="{% url 'admin_blog_edit' blog.id %}" 
+                        <a href="{% url 'admin_blog_edit' blog.id_str %}" 
                            class="admin-btn-secondary" 
                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
                            title="Edit">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button onclick="confirmDelete({{ blog.id }}, '{{ blog.title|escapejs }}')" 
+                        <button onclick="confirmDelete('{{ blog.id_str }}', '{{ blog.title|escapejs }}')" 
                                 class="admin-btn-danger" 
                                 style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
                                 title="Delete">
@@ -146,21 +146,21 @@
 {% endif %}
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 9999; align-items: center; justify-content: center;">
-    <div class="admin-card" style="max-width: 400px; margin: 2rem;">
-        <h3 style="font-weight: 600; margin-bottom: 1rem; color: var(--admin-text-primary);">
+<div id="deleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width: 420px; margin: 2rem; text-align: left;">
+        <h3 style="font-weight: 600; margin-bottom: 0.75rem; color: var(--admin-text-primary);">
             Delete Blog Post
         </h3>
-        <p style="color: var(--admin-text-secondary); margin-bottom: 1.5rem;">
-            Are you sure you want to delete "<span id="deleteBlogTitle"></span>"? This action cannot be undone.
+        <p style="color: var(--admin-text-secondary); margin-bottom: 1.25rem;">
+            Are you sure you want to delete "<span id="deleteBlogTitle"></span>"?
         </p>
-        <div style="display: flex; gap: 0.75rem;">
-            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex: 1; justify-content: center;">
+        <div style="display:flex; gap:0.75rem;">
+            <button onclick="closeDeleteModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">
                 Cancel
             </button>
-            <form id="deleteForm" method="POST" style="flex: 1;">
+            <form id="deleteForm" method="POST" style="flex:1;">
                 {% csrf_token %}
-                <button type="submit" class="admin-btn-danger" style="width: 100%; justify-content: center;">
+                <button type="submit" class="admin-btn-danger" style="width:100%; justify-content:center;">
                     Delete
                 </button>
             </form>

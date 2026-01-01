@@ -1,407 +1,439 @@
-# from django.db import models
-# from django.contrib.auth.models import User
+import os
+from types import SimpleNamespace
 
-# class Profile(models.Model):
-#     name = models.CharField(max_length=100)
-#     role = models.CharField(max_length=100)
-#     bio = models.TextField()
-#     email = models.EmailField()
-#     phone = models.CharField(max_length=20, blank=True)
-#     image = models.ImageField(upload_to='profiles/', blank=True, null=True)
-#     resume = models.FileField(upload_to='resumes/', blank=True, null=True)
-#     github = models.URLField(blank=True)
-#     linkedin = models.URLField(blank=True)
-#     twitter = models.URLField(blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-    
-#     class Meta:
-#         db_table = 'profile'
-    
-#     def __str__(self):
-#         return self.name
-
-# class Skill(models.Model):
-#     CATEGORY_CHOICES = [
-#         ('programming', 'Programming'),
-#         ('data_science', 'Data Science'),
-#         ('web', 'Web Development'),
-#         ('tools', 'Tools & Technologies'),
-#         ('other', 'Other'),
-#     ]
-    
-#     name = models.CharField(max_length=100)
-#     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-#     proficiency = models.IntegerField(default=0)  # 0-100
-#     icon = models.CharField(max_length=50, blank=True)  # Bootstrap icon name
-#     created_at = models.DateTimeField(auto_now_add=True)
-    
-#     class Meta:
-#         db_table = 'skills'
-#         ordering = ['-proficiency', 'name']
-    
-#     def __str__(self):
-#         return self.name
-
-# class Project(models.Model):
-#     title = models.CharField(max_length=200)
-#     description = models.TextField()
-#     tech_stack = models.JSONField(default=list)  # List of technologies
-#     image = models.ImageField(upload_to='projects/', blank=True, null=True)
-#     github_link = models.URLField(blank=True)
-#     demo_link = models.URLField(blank=True)
-#     is_featured = models.BooleanField(default=False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-    
-#     class Meta:
-#         db_table = 'projects'
-#         ordering = ['-created_at']
-    
-#     def __str__(self):
-#         return self.title
-
-# class Blog(models.Model):
-#     STATUS_CHOICES = [
-#         ('draft', 'Draft'),
-#         ('published', 'Published'),
-#     ]
-    
-#     title = models.CharField(max_length=200)
-#     content = models.TextField()  # HTML from QuillJS
-#     preview = models.TextField(max_length=300)
-#     cover_image = models.ImageField(upload_to='blogs/', blank=True, null=True)
-#     tags = models.JSONField(default=list)  # List of tags
-#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-#     read_time = models.IntegerField(default=5)  # Minutes
-#     author = models.ForeignKey(User, on_delete=models.CASCADE)
-#     published_date = models.DateTimeField(null=True, blank=True)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-    
-#     class Meta:
-#         db_table = 'blogs'
-#         ordering = ['-created_at']
-    
-#     def __str__(self):
-#         return self.title
-
-# apps/public/models.py
-
-from django.db import models
-from django.contrib.auth.models import User
+from django.core.files.storage import default_storage
+from django.utils import timezone
 from django.utils.text import slugify
-from mongoengine import Document, StringField
+
+from mongoengine import (
+    BooleanField,
+    DateTimeField,
+    Document,
+    IntField,
+    ListField,
+    ReferenceField,
+    StringField,
+)
+from mongoengine import NULLIFY
+
+
+def _now():
+    return timezone.now()
+
+
+class StoredFileProxy:
+    """A tiny stand-in for Django's FieldFile so templates can keep using `.url` and `.name`."""
+
+    def __init__(self, path):
+        self._path = path
+
+    def __bool__(self):
+        return bool(self._path)
+
+    @property
+    def url(self):
+        if not self._path:
+            return ""
+        return default_storage.url(self._path)
+
+    @property
+    def name(self):
+        return self._path or ""
+
+    def __str__(self):
+        return self.url
+
+
+class FileFieldDescriptor:
+    """Descriptor that persists UploadedFile via Django's storage and keeps the original path."""
+
+    def __init__(self, storage_field, upload_to):
+        self.storage_field = storage_field
+        self.upload_to = upload_to
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return StoredFileProxy(getattr(instance, self.storage_field))
+
+    def __set__(self, instance, value):
+        if not value:
+            setattr(instance, self.storage_field, None)
+            return
+
+        if hasattr(value, "read") and hasattr(value, "name"):
+            destination = os.path.join(self.upload_to, value.name)
+            saved_path = default_storage.save(destination, value)
+            if os.sep != "/":
+                saved_path = saved_path.replace(os.sep, "/")
+            setattr(instance, self.storage_field, saved_path)
+            return
+
+        setattr(instance, self.storage_field, value)
+
+
+class TimestampedDocument(Document):
+    meta = {"abstract": True}
+
+    created_at = DateTimeField(default=_now)
+    updated_at = DateTimeField(default=_now)
+
+    def save(self, *args, **kwargs):
+        now = _now()
+        if not self.created_at:
+            self.created_at = now
+        self.updated_at = now
+        return super().save(*args, **kwargs)
+
+    @property
+    def id_str(self):
+        return str(self.id)
+
+
+class UpdatedDocument(Document):
+    meta = {"abstract": True}
+
+    updated_at = DateTimeField(default=_now)
+
+    def save(self, *args, **kwargs):
+        self.updated_at = _now()
+        return super().save(*args, **kwargs)
+
+
+class SingletonDocument(UpdatedDocument):
+    meta = {"abstract": True}
+
+    def save(self, *args, **kwargs):
+        if not self.id and self.__class__.objects.count() > 0:
+            raise ValueError(f"Only one {self.__class__.__name__} instance is allowed")
+        return super().save(*args, **kwargs)
+
 
 class TestPost(Document):
     title = StringField(required=True)
     content = StringField()
 
-    meta = {
-        'collection': 'test_posts'
-    }
-class SkillCategory(models.Model):
-    """Admin-managed skill categories"""
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=120, unique=True, blank=True)
-    description = models.CharField(max_length=255, blank=True)
-    is_active = models.BooleanField(default=True)
-    order = models.IntegerField(default=0)
+    meta = {"collection": "test_posts"}
 
-    class Meta:
-        db_table = 'skill_categories'
-        ordering = ['-order', 'name']
+
+class SkillCategory(Document):
+    name = StringField(max_length=100, required=True, unique=True)
+    slug = StringField(max_length=120, unique=True)
+    description = StringField(max_length=255, default="")
+    is_active = BooleanField(default=True)
+    order = IntField(default=0)
+
+    meta = {"collection": "skill_categories", "ordering": ["-order", "name"]}
 
     def __str__(self):
         return self.name
+
+    @property
+    def id_str(self):
+        return str(self.id)
+
+    @property
+    def proficiency_percent(self):
+        value_raw = str(self.proficiency or '').strip()
+        if value_raw.endswith('%'):
+            value_raw = value_raw[:-1]
+        try:
+            value = int(''.join(ch for ch in value_raw if ch.isdigit()))
+        except (TypeError, ValueError):
+            value = 0
+        return max(0, min(100, value))
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            base_slug = slugify(self.name) or 'category'
-            slug = base_slug
-            counter = 1
-            while SkillCategory.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-            self.slug = slug
-        super().save(*args, **kwargs)
+        self.slug = self._generate_slug() if not self.slug else self.slug
+        return super().save(*args, **kwargs)
+
+    def _generate_slug(self):
+        base = slugify(self.name) or "category"
+        candidate = base
+        counter = 1
+
+        while True:
+            query = SkillCategory.objects(slug=candidate)
+            if self.id:
+                query = query.filter(id__ne=self.id)
+            if query.count() == 0:
+                break
+            candidate = f"{base}-{counter}"
+            counter += 1
+
+        return candidate
 
 
-class Profile(models.Model):
-    name = models.CharField(max_length=100)
-    role = models.CharField(max_length=100)
-    bio = models.TextField()
-    email = models.EmailField()
-    phone = models.CharField(max_length=20, blank=True)
-    image = models.ImageField(upload_to='profiles/', blank=True, null=True)
-    resume = models.FileField(upload_to='resumes/', blank=True, null=True)
-    github = models.URLField(blank=True)
-    linkedin = models.URLField(blank=True)
-    twitter = models.URLField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'profile'
-    
+class Profile(TimestampedDocument):
+    name = StringField(max_length=100, required=True)
+    role = StringField(max_length=100, required=True)
+    bio = StringField()
+    email = StringField(required=True)
+    phone = StringField()
+    github = StringField()
+    linkedin = StringField()
+    twitter = StringField()
+    image_path = StringField()
+    resume_path = StringField()
+
+    image = FileFieldDescriptor("image_path", "profiles")
+    resume = FileFieldDescriptor("resume_path", "resumes")
+
+    meta = {"collection": "profile"}
+
     def __str__(self):
         return self.name
 
 
-class Skill(models.Model):
-    name = models.CharField(max_length=100)
-    category = models.ForeignKey(
-        SkillCategory,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='skills'
-    )
-    is_active = models.BooleanField(default=True)
-    proficiency = models.IntegerField(default=0)  # 0-100
-    icon = models.CharField(max_length=50, blank=True)  # Bootstrap icon name
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'skills'
-        ordering = ['category__name', '-proficiency']
-    
+class Skill(TimestampedDocument):
+    name = StringField(max_length=100, required=True)
+    category = ReferenceField("SkillCategory", reverse_delete_rule=NULLIFY)
+    is_active = BooleanField(default=True)
+    proficiency = IntField(default=0)
+    icon = StringField(max_length=50, default="")
+
+    meta = {"collection": "skills", "ordering": ["-proficiency"]}
+
     def __str__(self):
         return self.name
 
     @property
     def category_name(self):
-        return self.category.name if self.category else 'Uncategorized'
+        return self.category.name if self.category else "Uncategorized"
+
+    @property
+    def proficiency_percent(self):
+        value = self.proficiency
+        if value is None:
+            value = 0
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            value = 0
+        return max(0, min(100, value))
 
 
-class Project(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    tech_stack = models.JSONField(default=list)  # List of technologies
-    image = models.ImageField(upload_to='projects/', blank=True, null=True)
-    github_link = models.URLField(blank=True)
-    demo_link = models.URLField(blank=True)
-    is_featured = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'projects'
-        ordering = ['-created_at']
-    
+class Project(TimestampedDocument):
+    title = StringField(max_length=200, required=True)
+    description = StringField()
+    tech_stack = ListField(StringField(), default=list)
+    image_path = StringField()
+    github_link = StringField()
+    demo_link = StringField()
+    is_featured = BooleanField(default=False)
+    is_active = BooleanField(default=True)
+
+    image = FileFieldDescriptor("image_path", "projects")
+
+    meta = {"collection": "projects", "ordering": ["-created_at"]}
+
     def __str__(self):
         return self.title
 
 
-class Blog(models.Model):
-    STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('published', 'Published'),
-    ]
-    
-    title = models.CharField(max_length=200)
-    content = models.TextField()  # HTML from QuillJS
-    preview = models.TextField(max_length=300)
-    cover_image = models.ImageField(upload_to='blogs/', blank=True, null=True)
-    tags = models.JSONField(default=list)  # List of tags
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    is_active = models.BooleanField(default=True)
-    read_time = models.IntegerField(default=5)  # Minutes
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    published_date = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'blogs'
-        ordering = ['-created_at']
-    
+class Blog(TimestampedDocument):
+    STATUS_CHOICES = ("draft", "published")
+
+    title = StringField(max_length=200, required=True)
+    content = StringField()
+    preview = StringField(max_length=300)
+    cover_image_path = StringField()
+    tags = ListField(StringField(), default=list)
+    status = StringField(choices=STATUS_CHOICES, default="draft")
+    is_active = BooleanField(default=True)
+    read_time = IntField(default=5)
+    author_username = StringField()
+    author_display_name = StringField()
+    author_id = StringField()
+    published_date = DateTimeField()
+
+    cover_image = FileFieldDescriptor("cover_image_path", "blogs")
+
+    meta = {"collection": "blogs", "ordering": ["-created_at"]}
+
     def __str__(self):
         return self.title
 
+    @property
+    def author(self):
+        if not self.author_username:
+            return None
+        return SimpleNamespace(
+            username=self.author_username,
+            get_full_name=lambda: self.author_display_name or self.author_username,
+        )
 
-# NEW MODELS FOR PAGE CONTENT MANAGEMENT
+    @author.setter
+    def author(self, user):
+        if not user:
+            self.author_username = None
+            self.author_display_name = None
+            self.author_id = None
+            return
 
-class HomePage(models.Model):
-    """Home page content management"""
-    hero_title = models.CharField(max_length=200, default="Your Name")
-    hero_subtitle = models.TextField(default="MCA Student | Data Scientist")
-    hero_description = models.TextField()
-    show_hero_title = models.BooleanField(default=True)
-    show_hero_subtitle = models.BooleanField(default=True)
-    show_hero_description = models.BooleanField(default=True)
-    
-    # Statistics
-    show_stats = models.BooleanField(default=True)
-    custom_stat_label = models.CharField(max_length=50, default="Tech Stack")
-    custom_stat_value = models.CharField(max_length=20, default="5+")
-    
-    # CTA Section
-    cta_title = models.CharField(max_length=200, default="Let's Work Together")
-    cta_description = models.TextField(default="Have a project in mind? Let's create something amazing together.")
-    cta_button_text = models.CharField(max_length=50, default="Get In Touch")
-    show_cta_section = models.BooleanField(default=True)
-    
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'home_page'
-        verbose_name = 'Home Page Content'
-        verbose_name_plural = 'Home Page Content'
-    
+        self.author_username = getattr(user, "username", "")
+        self.author_display_name = (
+            getattr(user, "get_full_name", lambda: "")() or self.author_username
+        )
+        self.author_id = str(getattr(user, "pk", getattr(user, "id", "")))
+
+
+class HomePage(SingletonDocument):
+    hero_title = StringField(max_length=200, default="Your Name")
+    hero_subtitle = StringField(default="MCA Student | Data Scientist")
+    hero_description = StringField(default="")
+    show_hero_title = BooleanField(default=True)
+    show_hero_subtitle = BooleanField(default=True)
+    show_hero_description = BooleanField(default=True)
+    show_stats = BooleanField(default=True)
+    custom_stat_label = StringField(max_length=50, default="Tech Stack")
+    custom_stat_value = StringField(max_length=20, default="5+")
+    cta_title = StringField(max_length=200, default="Let's Work Together")
+    cta_description = StringField(default="Have a project in mind? Let's create something amazing together.")
+    cta_button_text = StringField(max_length=50, default="Get In Touch")
+    show_cta_section = BooleanField(default=True)
+    show_skills_summary = BooleanField(default=True)
+
+    meta = {
+        "collection": "home_page",
+        "verbose_name": "Home Page Content",
+        "verbose_name_plural": "Home Page Content",
+    }
+
     def __str__(self):
         return "Home Page Content"
-    
-    def save(self, *args, **kwargs):
-        # Ensure only one instance exists
-        if not self.pk and HomePage.objects.exists():
-            raise ValueError('Only one HomePage instance is allowed')
-        return super().save(*args, **kwargs)
 
 
-class AboutPage(models.Model):
-    """About page content management"""
-    page_title = models.CharField(max_length=200, default="About Me")
-    introduction = models.TextField()  # HTML from QuillJS
-    show_page_title = models.BooleanField(default=True)
-    show_introduction = models.BooleanField(default=True)
-    show_stats_section = models.BooleanField(default=True)
-    show_interests = models.BooleanField(default=True)
-    show_values = models.BooleanField(default=True)
-    
-    # Education
-    
-    show_education = models.BooleanField(default=True)
-    # Interests Section
-    interests_title = models.CharField(max_length=200, default="Interests & Passion")
-    interests_subtitle = models.CharField(max_length=200, default="What drives me")
-    
-    # Values Section
-    values_title = models.CharField(max_length=200, default="Core Values")
-    values_subtitle = models.CharField(max_length=200, default="Principles I live by")
-    
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'about_page'
-        verbose_name = 'About Page Content'
-        verbose_name_plural = 'About Page Content'
-    
+class AboutPage(SingletonDocument):
+    page_title = StringField(max_length=200, default="About Me")
+    introduction = StringField(default="")
+    show_page_title = BooleanField(default=True)
+    show_introduction = BooleanField(default=True)
+    show_stats_section = BooleanField(default=True)
+    show_interests = BooleanField(default=True)
+    show_values = BooleanField(default=True)
+    show_education = BooleanField(default=True)
+    interests_title = StringField(max_length=200, default="Interests & Passion")
+    interests_subtitle = StringField(max_length=200, default="What drives me")
+    values_title = StringField(max_length=200, default="Core Values")
+    values_subtitle = StringField(max_length=200, default="Principles I live by")
+
+    meta = {
+        "collection": "about_page",
+        "verbose_name": "About Page Content",
+        "verbose_name_plural": "About Page Content",
+    }
+
     def __str__(self):
         return "About Page Content"
-    
-    def save(self, *args, **kwargs):
-        if not self.pk and AboutPage.objects.exists():
-            raise ValueError('Only one AboutPage instance is allowed')
-        return super().save(*args, **kwargs)
 
 
-class Education(models.Model):
-    """Education entries for About page"""
-    degree = models.CharField(max_length=200)
-    institution = models.CharField(max_length=200)
-    year = models.CharField(max_length=50)
-    description = models.TextField()
-    order = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'education'
-        ordering = ['order', '-created_at']
-    
+class Education(TimestampedDocument):
+    degree = StringField(max_length=200, required=True)
+    institution = StringField(max_length=200, required=True)
+    year = StringField(max_length=50)
+    description = StringField()
+    order = IntField(default=0)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "education", "ordering": ["order", "-created_at"]}
+
     def __str__(self):
         return f"{self.degree} - {self.institution}"
 
 
-class Interest(models.Model):
-    """Interests for About page"""
-    title = models.CharField(max_length=100)
-    description = models.CharField(max_length=200)
-    icon = models.CharField(max_length=50)  # Bootstrap icon
-    color = models.CharField(max_length=20, default='accent-primary')  # CSS color class
-    order = models.IntegerField(default=0)
-    
-    class Meta:
-        db_table = 'interests'
-        ordering = ['order']
-    
+class Interest(TimestampedDocument):
+    title = StringField(max_length=100, required=True)
+    description = StringField(max_length=200)
+    icon = StringField(max_length=50)
+    color = StringField(max_length=20, default="accent-primary")
+    order = IntField(default=0)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "interests", "ordering": ["order"]}
+
     def __str__(self):
         return self.title
 
 
-class CoreValue(models.Model):
-    """Core values for About page"""
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-    icon = models.CharField(max_length=50)  # Bootstrap icon
-    color = models.CharField(max_length=20, default='accent-primary')
-    order = models.IntegerField(default=0)
-    
-    class Meta:
-        db_table = 'core_values'
-        ordering = ['order']
-    
+class CoreValue(TimestampedDocument):
+    title = StringField(max_length=100, required=True)
+    description = StringField()
+    icon = StringField(max_length=50)
+    color = StringField(max_length=20, default="accent-primary")
+    order = IntField(default=0)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "core_values", "ordering": ["order"]}
+
     def __str__(self):
         return self.title
 
 
-class ContactPage(models.Model):
-    """Contact page content management"""
-    page_title = models.CharField(max_length=200, default="Get In Touch")
-    page_subtitle = models.TextField(default="Have a project in mind or want to collaborate? I'd love to hear from you!")
-    show_page_title = models.BooleanField(default=True)
-    show_page_subtitle = models.BooleanField(default=True)
-    
-    # Connect Section
-    connect_title = models.CharField(max_length=200, default="Let's Connect")
-    connect_description = models.TextField()  # HTML from QuillJS
-    show_connect_section = models.BooleanField(default=True)
-    
-    # CTA Section
-    cta_title = models.CharField(max_length=200, default="Ready to Start a Project?")
-    cta_description = models.TextField(default="Let's work together to bring your ideas to life.")
-    cta_button_text = models.CharField(max_length=50, default="View My Work")
-    show_cta_section = models.BooleanField(default=True)
-    
-    # Display toggles
-    show_contact_info = models.BooleanField(default=True)
-    show_contact_form = models.BooleanField(default=True)
-    
-    # Contact Info
-    show_phone = models.BooleanField(default=True)
-    show_location = models.BooleanField(default=True)
-    location_text = models.CharField(max_length=200, default="India")
-    
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        db_table = 'contact_page'
-        verbose_name = 'Contact Page Content'
-        verbose_name_plural = 'Contact Page Content'
-    
+class ResearchCategory(TimestampedDocument):
+    name = StringField(max_length=100, required=True)
+    description = StringField(max_length=255, default="")
+    order = IntField(default=0)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "research_categories", "ordering": ["order", "-created_at"]}
+
+    def __str__(self):
+        return self.name
+
+
+class ResearchEntry(TimestampedDocument):
+    title = StringField(max_length=200, required=True)
+    description = StringField()
+    publication = StringField(max_length=200, default="")
+    link = StringField(default="")
+    category = ReferenceField(ResearchCategory, reverse_delete_rule=NULLIFY)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "research_entries", "ordering": ["-created_at"]}
+
+    def __str__(self):
+        return self.title
+
+
+class ContactPage(SingletonDocument):
+    page_title = StringField(max_length=200, default="Get In Touch")
+    page_subtitle = StringField(default="Have a project in mind or want to collaborate? I'd love to hear from you!")
+    show_page_title = BooleanField(default=True)
+    show_page_subtitle = BooleanField(default=True)
+    connect_title = StringField(max_length=200, default="Let's Connect")
+    connect_description = StringField(default="Share your ideas and we will turn them into reality.")
+    show_connect_section = BooleanField(default=True)
+    cta_title = StringField(max_length=200, default="Ready to Start a Project?")
+    cta_description = StringField(default="Let's work together to bring your ideas to life.")
+    cta_button_text = StringField(max_length=50, default="View My Work")
+    show_cta_section = BooleanField(default=True)
+    show_contact_info = BooleanField(default=True)
+    show_contact_form = BooleanField(default=True)
+    show_phone = BooleanField(default=True)
+    show_location = BooleanField(default=True)
+    location_text = StringField(max_length=200, default="India")
+
+    meta = {
+        "collection": "contact_page",
+        "verbose_name": "Contact Page Content",
+        "verbose_name_plural": "Contact Page Content",
+    }
+
     def __str__(self):
         return "Contact Page Content"
-    
-    def save(self, *args, **kwargs):
-        if not self.pk and ContactPage.objects.exists():
-            raise ValueError('Only one ContactPage instance is allowed')
-        return super().save(*args, **kwargs)
-# Add to apps/public/models.py
 
-class ContactSubmission(models.Model):
-    """Store contact form submissions"""
-    name = models.CharField(max_length=200)
-    email = models.EmailField()
-    subject = models.CharField(max_length=300)
-    message = models.TextField()
-    submitted_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
-    notes = models.TextField(blank=True, help_text="Admin notes about this submission")
-    
-    class Meta:
-        db_table = 'contact_submissions'
-        ordering = ['-submitted_at']
-    
+
+class ContactSubmission(Document):
+    name = StringField(max_length=200, required=True)
+    email = StringField(required=True)
+    subject = StringField(max_length=300)
+    message = StringField()
+    submitted_at = DateTimeField(default=_now)
+    is_read = BooleanField(default=False)
+    notes = StringField(default="")
+
+    meta = {"collection": "contact_submissions", "ordering": ["-submitted_at"]}
+
     def __str__(self):
         return f"{self.name} - {self.subject}"

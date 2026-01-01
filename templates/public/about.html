@@ -83,28 +83,14 @@
                 {% endif %}
                 
                 {% if about_page_visibility.stats_section %}
-                <!-- Quick Stats -->
                 <div class="grid grid-cols-2 gap-4 pt-4">
+                    {% for stat in hero_stats %}
                     <div class="stat-card">
-                        <i class="bi bi-mortarboard text-3xl text-accent-primary mb-2"></i>
-                        <p class="text-2xl font-bold">MCA</p>
-                        <p class="text-sm text-muted">Student</p>
+                        <i class="bi {{ stat.icon }} text-3xl text-accent-primary mb-2"></i>
+                        <p class="text-2xl font-bold">{{ stat.value }}</p>
+                        <p class="text-sm text-muted">{{ stat.subtitle }}</p>
                     </div>
-                    <div class="stat-card">
-                        <i class="bi bi-code-slash text-3xl text-accent-secondary mb-2"></i>
-                        <p class="text-2xl font-bold">{{ projects_count }}+</p>
-                        <p class="text-sm text-muted">Projects</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="bi bi-file-text text-3xl text-accent-success mb-2"></i>
-                        <p class="text-2xl font-bold">{{ blogs_count }}+</p>
-                        <p class="text-sm text-muted">Articles</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="bi bi-star text-3xl text-accent-warning mb-2"></i>
-                        <p class="text-2xl font-bold">5+</p>
-                        <p class="text-sm text-muted">Skills</p>
-                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
                 <div class="pt-4">
@@ -115,6 +101,49 @@
                 </div>
             </div>
         </div>
+        {% if research_data %}
+        <section class="py-16">
+            <div class="text-center mb-10">
+                <h2 class="section-title">Research &amp; Articles</h2>
+                <p class="section-subtitle">Documented findings, publications, and journal work.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                {% for block in research_data %}
+                <div class="timeline-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-xl font-semibold">{{ block.category.name }}</h3>
+                            <p class="text-sm text-muted">{{ block.category.description }}</p>
+                        </div>
+                        <i class="bi bi-journal-text text-2xl text-accent-primary"></i>
+                    </div>
+                    {% if block.entries %}
+                    <div class="space-y-4">
+                        {% for entry in block.entries %}
+                        <div class="timeline-card mb-4 last:mb-0 border">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h4 class="text-lg font-bold">{{ entry.title }}</h4>
+                                    <p class="text-sm text-muted">{{ entry.publication }}</p>
+                                </div>
+                                {% if entry.link %}
+                                <a href="{{ entry.link }}" target="_blank" class="text-accent-primary font-semibold text-sm hover:underline">
+                                    View
+                                </a>
+                                {% endif %}
+                            </div>
+                            <p class="text-secondary text-sm mt-3">{{ entry.description }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-secondary text-sm">No entries yet.</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
     </div>
 </section>
 
@@ -154,80 +183,63 @@
 </section>
 {% endif %}
 
-{% if about_page_visibility.interests %}
-<!-- Interests Section -->
-<section class="py-20">
-    <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="section-title">Interests & Passion</h2>
-            <p class="section-subtitle">What drives me</p>
-        </div>
-        
-        <div class="grid md:grid-cols-4 gap-6">
-            <div class="interest-card">
-                <i class="bi bi-graph-up text-4xl text-accent-primary mb-4"></i>
-                <h3 class="font-semibold mb-2">Data Science</h3>
-                <p class="text-sm text-muted">Extracting insights from data</p>
+        {% if about_page_visibility.interests %}
+        <!-- Interests Section -->
+        <section class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="section-title">{{ about_page.interests_title }}</h2>
+                    <p class="section-subtitle">{{ about_page.interests_subtitle }}</p>
+                </div>
+                {% if interests %}
+                <div class="grid md:grid-cols-4 gap-6">
+                    {% for interest in interests %}
+                    <div class="interest-card">
+                        <i class="bi bi-{{ interest.icon }} text-4xl text-accent-primary mb-4"></i>
+                        <h3 class="font-semibold mb-2">{{ interest.title }}</h3>
+                        <p class="text-sm text-muted">{{ interest.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <p class="text-secondary">No interests added yet.</p>
+                </div>
+                {% endif %}
             </div>
-            <div class="interest-card">
-                <i class="bi bi-robot text-4xl text-accent-secondary mb-4"></i>
-                <h3 class="font-semibold mb-2">AI & ML</h3>
-                <p class="text-sm text-muted">Building intelligent systems</p>
-            </div>
-            <div class="interest-card">
-                <i class="bi bi-code-square text-4xl text-accent-success mb-4"></i>
-                <h3 class="font-semibold mb-2">Web Development</h3>
-                <p class="text-sm text-muted">Creating web solutions</p>
-            </div>
-            <div class="interest-card">
-                <i class="bi bi-lightbulb text-4xl text-accent-warning mb-4"></i>
-                <h3 class="font-semibold mb-2">Problem Solving</h3>
-                <p class="text-sm text-muted">Finding creative solutions</p>
-            </div>
-        </div>
-    </div>
-</section>
-{% endif %}
+        </section>
+        {% endif %}
 
-{% if about_page_visibility.values %}
-<!-- Values Section -->
-<section class="py-20 bg-secondary">
-    <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="section-title">Core Values</h2>
-            <p class="section-subtitle">Principles I live by</p>
-        </div>
-        
-        <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div class="value-card">
-                <div class="w-16 h-16 bg-accent-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="bi bi-trophy text-3xl text-accent-primary"></i>
+        {% if about_page_visibility.values %}
+        <!-- Values Section -->
+        <section class="py-20 bg-secondary">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="section-title">{{ about_page.values_title }}</h2>
+                    <p class="section-subtitle">{{ about_page.values_subtitle }}</p>
                 </div>
-                <h3 class="text-xl font-bold font-poppins mb-3">Excellence</h3>
-                <p class="text-secondary text-sm">
-                    Committed to delivering high-quality work and continuous improvement in everything I do.
-                </p>
-            </div>
-            <div class="value-card">
-                <div class="w-16 h-16 bg-accent-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="bi bi-heart text-3xl text-accent-secondary"></i>
+                {% if values_list %}
+                <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    {% for value in values_list %}
+                    {% with color=value.color|default:"accent-primary" %}
+                    <div class="value-card">
+                        <div class="w-16 h-16 bg-{{ color }}\/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="bi bi-{{ value.icon }} text-3xl text-{{ color }}"></i>
+                        </div>
+                        <h3 class="text-xl font-bold font-poppins mb-3">{{ value.title }}</h3>
+                        <p class="text-secondary text-sm">{{ value.description }}</p>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
                 </div>
-                <h3 class="text-xl font-bold font-poppins mb-3">Passion</h3>
-                <p class="text-secondary text-sm">
-                    Driven by genuine enthusiasm for technology and creating meaningful solutions.
-                </p>
-            </div>
-            <div class="value-card">
-                <div class="w-16 h-16 bg-accent-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="bi bi-people text-3xl text-accent-success"></i>
+                {% else %}
+                <div class="text-center">
+                    <p class="text-secondary">No core values added yet.</p>
                 </div>
-                <h3 class="text-xl font-bold font-poppins mb-3">Collaboration</h3>
-                <p class="text-secondary text-sm">
-                    Believe in the power of teamwork and knowledge sharing to achieve greater goals.
-                </p>
+                {% endif %}
             </div>
-        </div>
-    </div>
-</section>
-{% endif %}
+        </section>
+        {% endif %}
 {% endblock %}
+
+{% block extra_styles %}{% endblock %}

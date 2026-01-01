@@ -78,14 +78,25 @@
                 Statistics Section
             </h2>
             
-            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
-                <input type="checkbox" 
-                       id="show_stats" 
-                       name="show_stats" 
+        <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+            <input type="checkbox" 
+                   id="show_stats" 
+                   name="show_stats" 
                        {% if home_page.show_stats %}checked{% endif %}
-                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                   style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
                 <label for="show_stats" style="color: var(--admin-text-primary); cursor: pointer;">
                     Show Statistics Section
+                </label>
+            </div>
+
+            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                <input type="checkbox" 
+                       id="show_skills_summary" 
+                       name="show_skills_summary" 
+                       {% if home_page.show_skills_summary %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                <label for="show_skills_summary" style="color: var(--admin-text-primary); cursor: pointer;">
+                    Show Skills Summary Section
                 </label>
             </div>
             

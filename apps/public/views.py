@@ -1,19 +1,32 @@
 # apps/public/views.py
 
-from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
 from django.core.paginator import Paginator
-from .models import Profile, Skill, Project, Blog
-from django.db.models import Q
-from django.shortcuts import render, get_object_or_404
-from django.core.paginator import Paginator
-from .models import (
-    Profile, Skill, Project, Blog,
-    HomePage, AboutPage, ContactPage,
-    Education, Interest, CoreValue
-)
-from django.db.models import Q
 from django.http import JsonResponse
-from .models import ContactSubmission
+from django.shortcuts import render, redirect
+
+from mongoengine.queryset.visitor import Q
+
+from apps.common_utils import (
+    get_active_skill_categories,
+    get_document_or_404,
+    skill_sort_key,
+)
+from .models import (
+    AboutPage,
+    Blog,
+    ContactPage,
+    ContactSubmission,
+    CoreValue,
+    Education,
+    HomePage,
+    Interest,
+    Profile,
+    Project,
+    ResearchCategory,
+    ResearchEntry,
+    Skill,
+)
 
 
 def home(request):
@@ -40,7 +53,9 @@ def home(request):
     blogs_count = Blog.objects.filter(status='published', is_active=True).count()
     
     # Featured skills (top 4)
-    featured_skills = Skill.objects.filter(is_active=True, category__is_active=True).order_by('-proficiency')[:4]
+    active_categories = get_active_skill_categories()
+    category_filter = {"category__in": active_categories} if active_categories else {"category__in": []}
+    featured_skills = Skill.objects.filter(is_active=True, **category_filter).order_by('-proficiency')[:4]
 
     typing_texts = [skill.name for skill in featured_skills]
     
@@ -88,8 +103,44 @@ def about(request):
     interests = Interest.objects.all()
     
     # Get core values
-    core_values = CoreValue.objects.all()
+    core_values = CoreValue.objects.filter(
+        Q(is_active=True) | Q(is_active__exists=False)
+    )
     
+    latest_education = Education.objects.filter(order=0).order_by('-created_at').first()
+    skill_count = Skill.objects.filter(is_active=True).count()
+    research_count = ResearchEntry.objects.filter(
+        Q(is_active=True) | Q(is_active__exists=False)
+    ).count()
+    hero_stats = [
+        {
+            'icon': 'bi bi-mortarboard',
+            'value': latest_education.degree if latest_education else 'Education',
+            'subtitle': latest_education.institution if latest_education else '',
+        },
+        {
+            'icon': 'bi bi-code-slash',
+            'value': f'{projects_count}+',
+            'subtitle': 'Projects',
+        },
+        {
+            'icon': 'bi bi-file-earmark-text',
+            'value': f'{research_count}+',
+            'subtitle': 'Research',
+        },
+        {
+            'icon': 'bi bi-star',
+            'value': f'{skill_count}+',
+            'subtitle': 'Skills',
+        },
+    ]
+    research_categories = ResearchCategory.objects.filter(is_active=True)
+    research_data = []
+    for category in research_categories:
+        entries = ResearchEntry.objects.filter(category=category).filter(
+            Q(is_active=True) | Q(is_active__exists=False)
+        )
+        research_data.append({'category': category, 'entries': entries})
     context = {
         'profile': profile,
         'about_page': about_page,
@@ -97,7 +148,10 @@ def about(request):
         'blogs_count': blogs_count,
         'education': education,
         'interests': interests,
+        'values_list': core_values,
         'core_values': core_values,
+        'hero_stats': hero_stats,
+        'research_data': research_data,
         'about_page_visibility': {
             'page_title': getattr(about_page, 'show_page_title', True),
             'introduction': getattr(about_page, 'show_introduction', True),
@@ -110,8 +164,14 @@ def about(request):
 
 def skills(request):
     """Skills page view"""
-    all_skills = Skill.objects.filter(is_active=True, category__is_active=True).order_by('category__name', '-proficiency')
+    active_categories = get_active_skill_categories()
+    category_filter = {"category__in": active_categories} if active_categories else {"category__in": []}
+    all_skills_qs = Skill.objects.filter(is_active=True, **category_filter)
+    all_skills = sorted(all_skills_qs, key=skill_sort_key)
     
+    for skill in all_skills:
+        skill.display_proficiency = skill.proficiency_percent
+
     # Group skills by category
     skills_by_category = {}
     for skill in all_skills:
@@ -119,10 +179,34 @@ def skills(request):
         if category not in skills_by_category:
             skills_by_category[category] = []
         skills_by_category[category].append(skill)
-    
+
+    # Summary cards based on categories + active skills count
+    ICON_MAP = {
+        "programming-languages": "bi bi-slash-lg",
+        "data-science": "bi bi-graph-up",
+        "web-technologies": "bi bi-browser-chrome",
+        "tools-frameworks": "bi bi-gear",
+    }
+    skill_summaries = []
+    for category in active_categories:
+        count = Skill.objects.filter(category=category, is_active=True).count()
+        skill_summaries.append({
+            "name": category.name,
+            "count": count,
+            "display": f"{count}+" if count else "0",
+            "icon": ICON_MAP.get(category.slug, "bi bi-star"),
+        })
+
+    home_page = HomePage.objects.first()
     context = {
         'skills_by_category': skills_by_category,
         'all_skills': all_skills,
+        'skill_summaries': skill_summaries,
+        'show_skills_summary': getattr(home_page, 'show_skills_summary', True),
+        'show_cta_section': getattr(home_page, 'show_cta_section', True),
+        'cta_title': getattr(home_page, 'cta_title', 'Interested in Working Together?'),
+        'cta_description': getattr(home_page, 'cta_description', "Let's create something amazing"),
+        'cta_button_text': getattr(home_page, 'cta_button_text', 'Get In Touch'),
     }
     return render(request, 'public/skills.html', context)
 
@@ -153,10 +237,10 @@ def projects(request):
 
 def project_detail(request, id):
     """Single project detail page view"""
-    project = get_object_or_404(Project, id=id, is_active=True)
+    project = get_document_or_404(Project, id=id, is_active=True)
     
     # Get related projects (same tech stack or recent)
-    related_projects = Project.objects.filter(is_active=True).exclude(id=id).order_by('-created_at')[:3]
+    related_projects = Project.objects.filter(is_active=True).filter(id__ne=id).order_by('-created_at')[:3]
     
     context = {
         'project': project,
@@ -205,13 +289,13 @@ def blog_list(request):
 
 def blog_detail(request, id):
     """Single blog detail page view"""
-    blog = get_object_or_404(Blog, id=id, status='published', is_active=True)
+    blog = get_document_or_404(Blog, id=id, status='published', is_active=True)
     
     # Get related blogs (same tags or recent)
     related_blogs = Blog.objects.filter(
         status='published',
         is_active=True
-    ).exclude(id=id).order_by('-published_date')[:3]
+    ).filter(id__ne=id).order_by('-published_date')[:3]
     
     context = {
         'blog': blog,
@@ -260,12 +344,14 @@ def contact(request):
         # Validate data
         if name and email and subject and message:
             # Save to database
-            ContactSubmission.objects.create(
+            submission = ContactSubmission(
                 name=name,
                 email=email,
                 subject=subject,
                 message=message
             )
+            submission.save()
+
             
             # Return JSON response for AJAX
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

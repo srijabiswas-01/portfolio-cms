@@ -70,9 +70,9 @@
                 <div class="mb-12">
                     <h2 class="text-2xl font-bold font-poppins mb-4">About This Project</h2>
                     <div class="prose prose-invert max-w-none">
-                        <p class="text-secondary text-lg leading-relaxed">
-                            {{ project.description }}
-                        </p>
+                        <div class="text-secondary text-lg leading-relaxed">
+                            {{ project.description|safe }}
+                        </div>
                     </div>
                 </div>
 
@@ -162,7 +162,7 @@
                     <div class="p-6">
                         <h3 class="text-xl font-bold mb-2 line-clamp-1">{{ related.title }}</h3>
                         <p class="text-secondary text-sm mb-4 line-clamp-2">{{ related.description }}</p>
-                        <a href="{% url 'project_detail' related.id %}" class="btn-small-primary w-full text-center">
+                        <a href="{% url 'project_detail' related.id_str %}" class="btn-small-primary w-full text-center">
                             View Project
                         </a>
                     </div>

@@ -125,7 +125,7 @@
                         {{ project.created_at|date:"M d, Y" }}
                     </p>
                 </div>
-                <a href="{% url 'admin_project_edit' project.id %}" style="color: var(--admin-accent-primary); text-decoration: none;">
+                <a href="{% url 'admin_project_edit' project.id_str %}" style="color: var(--admin-accent-primary); text-decoration: none;">
                     <i class="bi bi-pencil"></i>
                 </a>
             </div>
@@ -166,7 +166,7 @@
                         {{ blog.created_at|date:"M d, Y" }}
                     </p>
                 </div>
-                <a href="{% url 'admin_blog_edit' blog.id %}" style="color: var(--admin-accent-primary); text-decoration: none;">
+                <a href="{% url 'admin_blog_edit' blog.id_str %}" style="color: var(--admin-accent-primary); text-decoration: none;">
                     <i class="bi bi-pencil"></i>
                 </a>
             </div>

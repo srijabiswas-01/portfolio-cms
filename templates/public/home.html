@@ -172,7 +172,7 @@
                     
                     <!-- Action Buttons -->
                     <div class="flex gap-3">
-                        <a href="{% url 'project_detail' project.id %}" class="btn-small-primary flex-1 text-center">
+                    <a href="{% url 'project_detail' project.id_str %}" class="btn-small-primary flex-1 text-center">
                             View Details
                         </a>
                         {% if project.github_link %}
@@ -238,7 +238,7 @@
                         {% endfor %}
                     </div>
                     
-                    <a href="{% url 'blog_detail' blog.id %}" class="text-accent-primary font-medium hover:underline">
+                    <a href="{% url 'blog_detail' blog.id_str %}" class="text-accent-primary font-medium hover:underline">
                         Read More <i class="bi bi-arrow-right ml-1"></i>
                     </a>
                 </div>

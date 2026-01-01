@@ -1,17 +1,23 @@
 
 # apps/admin_panel/views.py
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q
-from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from django.core.files.storage import default_storage
+
+from mongoengine.queryset.visitor import Q
+
+from apps.common_utils import get_document_or_404, get_singleton_document, skill_sort_key
 
 from apps.public.models import (
     Profile, Skill, Project, Blog,
     HomePage, AboutPage, ContactPage,
     Education, Interest, CoreValue,
+    ResearchCategory, ResearchEntry,
     ContactSubmission, SkillCategory,
 )
 # ============================================
@@ -125,18 +131,20 @@ def blog_editor(request):
         if action == 'publish':
             status = 'published'
         
-        blog = Blog.objects.create(
+        blog = Blog(
             title=title,
             content=content,
             preview=preview[:300],  # Limit to 300 chars
             tags=tags,
             status=status,
             read_time=read_time,
-            cover_image=cover_image,
             is_active=is_active,
-            author=request.user,
             published_date=timezone.now() if status == 'published' else None
         )
+        if cover_image:
+            blog.cover_image = cover_image
+        blog.author = request.user
+        blog.save()
         
         messages.success(request, f'Blog "{title}" created successfully!')
         return redirect('admin_blogs_list')
@@ -147,7 +155,7 @@ def blog_editor(request):
 @login_required
 def blog_edit(request, id):
     """Edit existing blog"""
-    blog = get_object_or_404(Blog, id=id)
+    blog = get_document_or_404(Blog, id=id)
     
     if request.method == 'POST':
         blog.title = request.POST.get('title')
@@ -186,10 +194,12 @@ def blog_edit(request, id):
 @login_required
 def blog_delete(request, id):
     """Delete blog"""
-    blog = get_object_or_404(Blog, id=id)
+    blog = get_document_or_404(Blog, id=id)
     
     if request.method == 'POST':
         title = blog.title
+        if blog.cover_image_path:
+            default_storage.delete(blog.cover_image_path)
         blog.delete()
         messages.success(request, f'Blog "{title}" deleted successfully!')
         return redirect('admin_blogs_list')
@@ -228,16 +238,18 @@ def project_form(request):
         is_featured = request.POST.get('is_featured') == 'on'
         is_active = request.POST.get('is_active') == 'on'
         
-        project = Project.objects.create(
+        project = Project(
             title=title,
             description=description,
             tech_stack=tech_stack,
-            image=image,
             github_link=github_link,
             demo_link=demo_link,
             is_featured=is_featured,
             is_active=is_active
         )
+        if image:
+            project.image = image
+        project.save()
         
         messages.success(request, f'Project "{title}" created successfully!')
         return redirect('admin_project_manager')
@@ -248,7 +260,7 @@ def project_form(request):
 @login_required
 def project_edit(request, id):
     """Edit existing project"""
-    project = get_object_or_404(Project, id=id)
+    project = get_document_or_404(Project, id=id)
     
     if request.method == 'POST':
         project.title = request.POST.get('title')
@@ -279,10 +291,12 @@ def project_edit(request, id):
 @login_required
 def project_delete(request, id):
     """Delete project"""
-    project = get_object_or_404(Project, id=id)
+    project = get_document_or_404(Project, id=id)
     
     if request.method == 'POST':
         title = project.title
+        if project.image_path:
+            default_storage.delete(project.image_path)
         project.delete()
         messages.success(request, f'Project "{title}" deleted successfully!')
         return redirect('admin_project_manager')
@@ -297,7 +311,8 @@ def project_delete(request, id):
 @login_required
 def skills_manager(request):
     """List all skills"""
-    skills = Skill.objects.select_related('category').order_by('category__name', '-proficiency')
+    skills = list(Skill.objects.all())
+    skills.sort(key=skill_sort_key)
     categories = SkillCategory.objects.all()
     
     context = {
@@ -310,8 +325,13 @@ def skills_manager(request):
 @login_required
 def skill_toggle_active(request, id):
     """Activate/deactivate a skill"""
-    skill = get_object_or_404(Skill, id=id)
-    skill.is_active = not skill.is_active
+    skill = get_document_or_404(Skill, id=id)
+    target = not skill.is_active
+    if target and skill.category and not skill.category.is_active:
+        messages.warning(request, f'Skill "{skill.name}" cannot be activated because its category is inactive.')
+        return redirect('admin_skills_manager')
+
+    skill.is_active = target
     skill.save()
     status = 'activated' if skill.is_active else 'deactivated'
     messages.success(request, f'Skill "{skill.name}" {status}.')
@@ -338,7 +358,7 @@ def skill_category_manage(request):
             order = 0
 
         if category_id:
-            category = get_object_or_404(SkillCategory, id=category_id)
+            category = get_document_or_404(SkillCategory, id=category_id)
             category.name = name
             category.description = description
             category.order = order
@@ -346,12 +366,13 @@ def skill_category_manage(request):
             category.save()
             messages.success(request, f'Category "{name}" updated.')
         else:
-            SkillCategory.objects.create(
+            category = SkillCategory(
                 name=name,
                 description=description,
                 order=order,
                 is_active=is_active
             )
+            category.save()
             messages.success(request, f'Category "{name}" added.')
 
     return redirect('admin_skills_manager')
@@ -360,9 +381,11 @@ def skill_category_manage(request):
 @login_required
 def skill_category_toggle_active(request, id):
     """Toggle category visibility"""
-    category = get_object_or_404(SkillCategory, id=id)
+    category = get_document_or_404(SkillCategory, id=id)
     category.is_active = not category.is_active
     category.save()
+    if not category.is_active:
+        Skill.objects.filter(category=category).update(is_active=False)
     status = 'active' if category.is_active else 'inactive'
     messages.success(request, f'Category "{category.name}" is now {status}.')
     return redirect('admin_skills_manager')
@@ -371,7 +394,7 @@ def skill_category_toggle_active(request, id):
 @login_required
 def skill_category_delete(request, id):
     """Delete skill category and clear relation"""
-    category = get_object_or_404(SkillCategory, id=id)
+    category = get_document_or_404(SkillCategory, id=id)
 
     if request.method == 'POST':
         Skill.objects.filter(category=category).update(category=None)
@@ -387,6 +410,16 @@ def skill_category_delete(request, id):
 def skill_create(request):
     """Create new skill"""
     if request.method == 'POST':
+        if request.POST.get('remove_resume'):
+            if profile and profile.resume_path:
+                default_storage.delete(profile.resume_path)
+                profile.resume_path = None
+                profile.save()
+                messages.success(request, 'Resume removed successfully.')
+            else:
+                messages.warning(request, 'No resume to remove.')
+            return redirect('admin_profile_manager')
+
         name = request.POST.get('name')
         category_id = request.POST.get('category_id')
         proficiency = request.POST.get('proficiency', 50)
@@ -394,13 +427,14 @@ def skill_create(request):
         is_active = request.POST.get('is_active') == 'on'
         category = SkillCategory.objects.filter(id=category_id).first() if category_id else None
         
-        skill = Skill.objects.create(
+        skill = Skill(
             name=name,
             category=category,
             is_active=is_active,
             proficiency=int(proficiency),
             icon=icon
         )
+        skill.save()
         
         messages.success(request, f'Skill "{name}" added successfully!')
         return redirect('admin_skills_manager')
@@ -411,7 +445,7 @@ def skill_create(request):
 @login_required
 def skill_edit(request, id):
     """Edit existing skill"""
-    skill = get_object_or_404(Skill, id=id)
+    skill = get_document_or_404(Skill, id=id)
     
     if request.method == 'POST':
         skill.name = request.POST.get('name')
@@ -432,7 +466,7 @@ def skill_edit(request, id):
 @login_required
 def skill_delete(request, id):
     """Delete skill"""
-    skill = get_object_or_404(Skill, id=id)
+    skill = get_document_or_404(Skill, id=id)
     
     if request.method == 'POST':
         name = skill.name
@@ -453,6 +487,16 @@ def profile_manager(request):
     profile = Profile.objects.first()
     
     if request.method == 'POST':
+        if request.POST.get('remove_resume'):
+            if profile and profile.resume_path:
+                default_storage.delete(profile.resume_path)
+                profile.resume_path = None
+                profile.save()
+                messages.success(request, 'Resume removed successfully.')
+            else:
+                messages.warning(request, 'No resume to remove.')
+            return redirect('admin_profile_manager')
+
         name = request.POST.get('name')
         role = request.POST.get('role')
         bio = request.POST.get('bio')
@@ -474,15 +518,19 @@ def profile_manager(request):
             profile.twitter = twitter
             
             if request.FILES.get('image'):
+                if profile.image_path:
+                    default_storage.delete(profile.image_path)
                 profile.image = request.FILES.get('image')
             if request.FILES.get('resume'):
+                if profile.resume_path:
+                    default_storage.delete(profile.resume_path)
                 profile.resume = request.FILES.get('resume')
             
             profile.save()
             messages.success(request, 'Profile updated successfully!')
         else:
             # Create new profile
-            profile = Profile.objects.create(
+            profile = Profile(
                 name=name,
                 role=role,
                 bio=bio,
@@ -491,9 +539,12 @@ def profile_manager(request):
                 github=github,
                 linkedin=linkedin,
                 twitter=twitter,
-                image=request.FILES.get('image'),
-                resume=request.FILES.get('resume')
             )
+            if request.FILES.get('image'):
+                profile.image = request.FILES.get('image')
+            if request.FILES.get('resume'):
+                profile.resume = request.FILES.get('resume')
+            profile.save()
             messages.success(request, 'Profile created successfully!')
         
         return redirect('admin_profile_manager')
@@ -506,8 +557,8 @@ def profile_manager(request):
 @login_required
 def home_page_manager(request):
     """Manage home page content"""
-    home_page, created = HomePage.objects.get_or_create(
-        id=1,
+    home_page = get_singleton_document(
+        HomePage,
         defaults={
             'hero_description': 'MCA Student specializing in Data Science, AI/ML, and Python Development.'
         }
@@ -523,6 +574,7 @@ def home_page_manager(request):
         home_page.show_stats = request.POST.get('show_stats') == 'on'
         home_page.custom_stat_label = request.POST.get('custom_stat_label')
         home_page.custom_stat_value = request.POST.get('custom_stat_value')
+        home_page.show_skills_summary = request.POST.get('show_skills_summary') == 'on'
         home_page.cta_title = request.POST.get('cta_title')
         home_page.cta_description = request.POST.get('cta_description')
         home_page.cta_button_text = request.POST.get('cta_button_text')
@@ -545,8 +597,8 @@ def home_page_manager(request):
 @login_required
 def about_page_manager(request):
     """Manage about page content"""
-    about_page, created = AboutPage.objects.get_or_create(
-        id=1,
+    about_page = get_singleton_document(
+        AboutPage,
         defaults={
             'introduction': '<p>Write your introduction here...</p>'
         }
@@ -574,12 +626,38 @@ def about_page_manager(request):
     education_list = Education.objects.all()
     interests_list = Interest.objects.all()
     values_list = CoreValue.objects.all()
+    research_categories = ResearchCategory.objects.all()
+    research_entries_qs = ResearchEntry.objects.order_by('-created_at')
+    research_category_filter = request.GET.get('research_category', '')
+    research_search = request.GET.get('research_search', '').strip()
+    if research_category_filter:
+        category_obj = ResearchCategory.objects.filter(id=research_category_filter).first()
+        if category_obj:
+            research_entries_qs = research_entries_qs.filter(category=category_obj)
+    if research_search:
+        research_entries_qs = research_entries_qs.filter(
+            Q(title__icontains=research_search) |
+            Q(description__icontains=research_search) |
+            Q(publication__icontains=research_search)
+        )
+
+    paginator = Paginator(research_entries_qs, 6)
+    research_page_number = request.GET.get('research_page')
+    research_entries_page = paginator.get_page(research_page_number)
+    research_entries_total = research_entries_qs.count()
     
     context = {
         'about_page': about_page,
         'education_list': education_list,
         'interests_list': interests_list,
         'values_list': values_list,
+        'research_categories': research_categories,
+        'research_entries': research_entries_page,
+        'research_entries_total': research_entries_total,
+        'research_paginator': paginator,
+        'research_page_obj': research_entries_page,
+        'research_category_filter': research_category_filter,
+        'research_search': research_search,
     }
     return render(request, 'admin/about_page_manager.html', context)
 
@@ -588,13 +666,14 @@ def about_page_manager(request):
 @login_required
 def education_create(request):
     if request.method == 'POST':
-        Education.objects.create(
+        education = Education(
             degree=request.POST.get('degree'),
             institution=request.POST.get('institution'),
             year=request.POST.get('year'),
             description=request.POST.get('description'),
             order=request.POST.get('order', 0)
         )
+        education.save()
         messages.success(request, 'Education entry added!')
         return redirect('admin_about_page_manager')
     return redirect('admin_about_page_manager')
@@ -602,7 +681,7 @@ def education_create(request):
 
 @login_required
 def education_edit(request, id):
-    education = get_object_or_404(Education, id=id)
+    education = get_document_or_404(Education, id=id)
     if request.method == 'POST':
         education.degree = request.POST.get('degree')
         education.institution = request.POST.get('institution')
@@ -617,10 +696,23 @@ def education_edit(request, id):
 
 @login_required
 def education_delete(request, id):
-    education = get_object_or_404(Education, id=id)
+    education = get_document_or_404(Education, id=id)
     if request.method == 'POST':
         education.delete()
         messages.success(request, 'Education entry deleted!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def education_toggle_active(request, id):
+    education = get_document_or_404(Education, id=id)
+    if request.method == 'POST':
+        education.is_active = not education.is_active
+        education.save()
+        status = 'activated' if education.is_active else 'deactivated'
+        messages.success(request, f'Education entry "{education.degree}" {status}.')
+    else:
+        messages.error(request, 'Invalid request method.')
     return redirect('admin_about_page_manager')
 
 
@@ -628,13 +720,14 @@ def education_delete(request, id):
 @login_required
 def interest_create(request):
     if request.method == 'POST':
-        Interest.objects.create(
+        interest = Interest(
             title=request.POST.get('title'),
             description=request.POST.get('description'),
             icon=request.POST.get('icon'),
             color=request.POST.get('color', 'accent-primary'),
             order=request.POST.get('order', 0)
         )
+        interest.save()
         messages.success(request, 'Interest added!')
         return redirect('admin_about_page_manager')
     return redirect('admin_about_page_manager')
@@ -642,7 +735,7 @@ def interest_create(request):
 
 @login_required
 def interest_edit(request, id):
-    interest = get_object_or_404(Interest, id=id)
+    interest = get_document_or_404(Interest, id=id)
     if request.method == 'POST':
         interest.title = request.POST.get('title')
         interest.description = request.POST.get('description')
@@ -657,10 +750,23 @@ def interest_edit(request, id):
 
 @login_required
 def interest_delete(request, id):
-    interest = get_object_or_404(Interest, id=id)
+    interest = get_document_or_404(Interest, id=id)
     if request.method == 'POST':
         interest.delete()
         messages.success(request, 'Interest deleted!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def interest_toggle_active(request, id):
+    interest = get_document_or_404(Interest, id=id)
+    if request.method == 'POST':
+        interest.is_active = not interest.is_active
+        interest.save()
+        status = 'activated' if interest.is_active else 'deactivated'
+        messages.success(request, f'Interest "{interest.title}" {status}.')
+    else:
+        messages.error(request, 'Invalid request method.')
     return redirect('admin_about_page_manager')
 
 
@@ -668,13 +774,14 @@ def interest_delete(request, id):
 @login_required
 def value_create(request):
     if request.method == 'POST':
-        CoreValue.objects.create(
+        core_value = CoreValue(
             title=request.POST.get('title'),
             description=request.POST.get('description'),
             icon=request.POST.get('icon'),
             color=request.POST.get('color', 'accent-primary'),
             order=request.POST.get('order', 0)
         )
+        core_value.save()
         messages.success(request, 'Core value added!')
         return redirect('admin_about_page_manager')
     return redirect('admin_about_page_manager')
@@ -682,7 +789,7 @@ def value_create(request):
 
 @login_required
 def value_edit(request, id):
-    value = get_object_or_404(CoreValue, id=id)
+    value = get_document_or_404(CoreValue, id=id)
     if request.method == 'POST':
         value.title = request.POST.get('title')
         value.description = request.POST.get('description')
@@ -697,10 +804,130 @@ def value_edit(request, id):
 
 @login_required
 def value_delete(request, id):
-    value = get_object_or_404(CoreValue, id=id)
+    value = get_document_or_404(CoreValue, id=id)
     if request.method == 'POST':
         value.delete()
         messages.success(request, 'Core value deleted!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def value_toggle_active(request, id):
+    value = get_document_or_404(CoreValue, id=id)
+    if request.method == 'POST':
+        value.is_active = not value.is_active
+        value.save()
+        status = 'activated' if value.is_active else 'deactivated'
+        messages.success(request, f'Core value "{value.title}" {status}.')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_category_create(request):
+    if request.method == 'POST':
+        order = request.POST.get('order', 0)
+        try:
+            order = int(order)
+        except (TypeError, ValueError):
+            order = 0
+        category = ResearchCategory(
+            name=request.POST.get('name'),
+            description=request.POST.get('description', ''),
+            order=order,
+            is_active=request.POST.get('is_active') == 'on'
+        )
+        category.save()
+        messages.success(request, 'Research category added!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_category_edit(request, id):
+    category = get_document_or_404(ResearchCategory, id=id)
+    if request.method == 'POST':
+        category.name = request.POST.get('name')
+        category.description = request.POST.get('description', '')
+        try:
+            category.order = int(request.POST.get('order', 0))
+        except (TypeError, ValueError):
+            category.order = 0
+        category.is_active = request.POST.get('is_active') == 'on'
+        category.save()
+        messages.success(request, 'Research category updated!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_category_delete(request, id):
+    category = get_document_or_404(ResearchCategory, id=id)
+    if request.method == 'POST':
+        ResearchEntry.objects.filter(category=category).update(category=None)
+        category.delete()
+        messages.success(request, 'Research category deleted!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_category_toggle_active(request, id):
+    category = get_document_or_404(ResearchCategory, id=id)
+    category.is_active = not category.is_active
+    category.save()
+    ResearchEntry.objects.filter(category=category).update(set__is_active=category.is_active)
+    status = 'activated' if category.is_active else 'deactivated'
+    messages.success(request, f'Research category \"{category.name}\" {status}.')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_entry_create(request):
+    if request.method == 'POST':
+        entry = ResearchEntry(
+            title=request.POST.get('title'),
+            description=request.POST.get('description', ''),
+            publication=request.POST.get('publication', ''),
+            link=request.POST.get('link', ''),
+            category=ResearchCategory.objects.filter(id=request.POST.get('category_id')).first()
+        )
+        entry.save()
+        messages.success(request, 'Research entry added!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_entry_edit(request, id):
+    entry = get_document_or_404(ResearchEntry, id=id)
+    if request.method == 'POST':
+        entry.title = request.POST.get('title')
+        entry.description = request.POST.get('description', '')
+        entry.publication = request.POST.get('publication', '')
+        entry.link = request.POST.get('link', '')
+        entry.category = ResearchCategory.objects.filter(id=request.POST.get('category_id')).first()
+        entry.save()
+        messages.success(request, 'Research entry updated!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def research_entry_toggle_active(request, id):
+    entry = get_document_or_404(ResearchEntry, id=id)
+    target = not entry.is_active
+    if target and entry.category and not entry.category.is_active:
+        messages.warning(request, f'Research entry \"{entry.title}\" cannot be activated while its category is inactive.')
+        return redirect('admin_about_page_manager')
+    entry.is_active = target
+    entry.save()
+    status = 'activated' if entry.is_active else 'deactivated'
+    messages.success(request, f'Research entry \"{entry.title}\" {status}.')
+    return redirect('admin_about_page_manager')
+
+@login_required
+def research_entry_delete(request, id):
+    entry = get_document_or_404(ResearchEntry, id=id)
+    if request.method == 'POST':
+        entry.delete()
+        messages.success(request, 'Research entry deleted!')
     return redirect('admin_about_page_manager')
 
 
@@ -711,8 +938,8 @@ def value_delete(request, id):
 @login_required
 def contact_page_manager(request):
     """Manage contact page content"""
-    contact_page, created = ContactPage.objects.get_or_create(
-        id=1,
+    contact_page = get_singleton_document(
+        ContactPage,
         defaults={
             'connect_description': '<p>Write your connect description here...</p>'
         }
@@ -794,7 +1021,7 @@ def contact_submissions(request):
 @login_required
 def contact_submission_detail(request, id):
     """View single contact submission"""
-    submission = get_object_or_404(ContactSubmission, id=id)
+    submission = get_document_or_404(ContactSubmission, id=id)
     
     # Mark as read when viewed
     if not submission.is_read:
@@ -817,7 +1044,7 @@ def contact_submission_detail(request, id):
 @login_required
 def contact_submission_delete(request, id):
     """Delete contact submission"""
-    submission = get_object_or_404(ContactSubmission, id=id)
+    submission = get_document_or_404(ContactSubmission, id=id)
     
     if request.method == 'POST':
         submission.delete()
@@ -830,7 +1057,7 @@ def contact_submission_delete(request, id):
 @login_required
 def contact_submission_mark_read(request, id):
     """Toggle read status"""
-    submission = get_object_or_404(ContactSubmission, id=id)
+    submission = get_document_or_404(ContactSubmission, id=id)
     submission.is_read = not submission.is_read
     submission.save()
     
