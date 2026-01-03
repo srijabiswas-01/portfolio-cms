@@ -1,15 +1,18 @@
 import os
 import sys
+from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
 
-def configure_django_settings() -> None:
+def configure_paths() -> None:
+    base_dir = Path(__file__).resolve().parent.parent
+    sys.path.append(str(base_dir))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "portfolio_project.settings")
 
 
 def main() -> None:
-    configure_django_settings()
+    configure_paths()
     import django
 
     django.setup()
