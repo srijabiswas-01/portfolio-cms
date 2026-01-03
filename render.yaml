@@ -1,21 +1,14 @@
-# services:
-#   - type: web
-#     name: portfolio-cms
-#     env: python
-#     pythonVersion: 3.10.13
-#     buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
-#     startCommand: gunicorn portfolio_project.wsgi:application
-
-
 services:
   - type: web
     name: portfolio-cms
     env: python
     pythonVersion: 3.10.13
+
     buildCommand: |
       pip install -r requirements.txt
-      python manage.py migrate --noinput
       python manage.py collectstatic --noinput
-      python manage.py shell -c "from django.contrib.auth import get_user_model; import os; User=get_user_model(); u=os.environ.get('DJANGO_SUPERUSER_USERNAME'); p=os.environ.get('DJANGO_SUPERUSER_PASSWORD'); e=os.environ.get('DJANGO_SUPERUSER_EMAIL',''); 
-      (User.objects.filter(username=u).exists() or User.objects.create_superuser(u,e,p)) if u and p else None"
-    startCommand: gunicorn portfolio_project.wsgi:application
+
+    startCommand: |
+      python manage.py migrate --noinput &&
+      python manage.py shell -c "from django.contrib.auth import get_user_model; import os; User=get_user_model(); u=os.environ.get('DJANGO_SUPERUSER_USERNAME'); p=os.environ.get('DJANGO_SUPERUSER_PASSWORD'); e=os.environ.get('DJANGO_SUPERUSER_EMAIL',''); (User.objects.filter(username=u).exists() or User.objects.create_superuser(u,e,p)) if u and p else None" &&
+      gunicorn portfolio_project.wsgi:application
