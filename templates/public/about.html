@@ -52,7 +52,7 @@
                 {% if about_page_visibility.page_title %}
                 <div>
                     <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-4">
-                        {{ about_page.page_title|default:"About " }}<span class="text-accent-primary">Me</span>
+                        {{ about_page.page_title|default:"About Me" }}
                     </h1>
                     <div class="w-20 h-1 bg-accent-primary rounded-full mb-6"></div>
                 </div>
@@ -182,6 +182,83 @@
     </div>
 </section>
 {% endif %}
+
+        {% if about_page_visibility.experiences %}
+        <section class="py-20 bg-secondary">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-10">
+                    <h2 class="section-title">{{ about_page.experiences_title|default:"Experiences" }}</h2>
+                    <p class="section-subtitle text-muted">
+                        {{ about_page.experiences_description|default:"Describe your key roles and the impact you have delivered."|safe }}
+                    </p>
+                </div>
+
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    {% if experiences %}
+                    {% for exp in experiences %}
+                    <div class="timeline-card">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h4 class="text-lg font-bold">{{ exp.title }}</h4>
+                                {% if exp.organization %}
+                                <p class="text-sm text-muted">{{ exp.organization }}</p>
+                                {% endif %}
+                            </div>
+                            {% if exp.period %}
+                            <span class="text-sm text-accent-primary font-semibold">{{ exp.period }}</span>
+                            {% endif %}
+                        </div>
+                        {% if exp.description %}
+                        <p class="text-secondary text-sm mt-3">{{ exp.description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-secondary text-sm text-center">No experiences added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if about_page_visibility.achievements %}
+        <section class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-10">
+                    <h2 class="section-title">{{ about_page.achievements_title|default:"Achievements" }}</h2>
+                    <p class="section-subtitle text-muted">
+                        {{ about_page.achievements_description|default:"Share awards, speaking engagements, certifications, or milestone wins."|safe }}
+                    </p>
+                </div>
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    {% if achievements %}
+                    {% for achievement in achievements %}
+                    <div class="timeline-card">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h4 class="text-lg font-bold">{{ achievement.title }}</h4>
+                                {% if achievement.year %}
+                                <p class="text-sm text-muted">{{ achievement.year }}</p>
+                                {% endif %}
+                            </div>
+                            {% if achievement.link %}
+                            <a href="{{ achievement.link }}" target="_blank" class="text-sm text-accent-primary font-semibold hover:underline">
+                                View
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% if achievement.description %}
+                        <p class="text-secondary text-sm mt-3">{{ achievement.description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-secondary text-sm text-center">No achievements added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
 
         {% if about_page_visibility.interests %}
         <!-- Interests Section -->

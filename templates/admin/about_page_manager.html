@@ -126,7 +126,7 @@
                        style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
             </div>
         </div>
-        
+
         <!-- Values Section Settings -->
         <div class="admin-card" style="margin-bottom: 1.5rem;">
             <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
@@ -162,6 +162,67 @@
             </div>
         </div>
 
+        <!-- Experiences & Achievements Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-briefcase-fill text-primary mr-2"></i>
+                Experiences &amp; Achievements
+            </h2>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="experiences_title">Experiences Title</label>
+                    <input type="text"
+                           id="experiences_title"
+                           name="experiences_title"
+                           class="admin-form-input"
+                           value="{{ about_page.experiences_title }}">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="achievements_title">Achievements Title</label>
+                    <input type="text"
+                           id="achievements_title"
+                           name="achievements_title"
+                           class="admin-form-input"
+                           value="{{ about_page.achievements_title }}">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="experiences_description">Experiences Description</label>
+                    <textarea id="experiences_description"
+                              name="experiences_description"
+                              class="admin-form-textarea"
+                              rows="4">{{ about_page.experiences_description }}</textarea>
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="achievements_description">Achievements Description</label>
+                    <textarea id="achievements_description"
+                              name="achievements_description"
+                              class="admin-form-textarea"
+                              rows="4">{{ about_page.achievements_description }}</textarea>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Experiences Card</label>
+                    <input type="checkbox"
+                           name="show_experiences_section"
+                           {% if about_page.show_experiences_section %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Achievements Card</label>
+                    <input type="checkbox"
+                           name="show_achievements_section"
+                           {% if about_page.show_achievements_section %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+
         <!-- Action Buttons -->
         <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-bottom: 2rem;">
             <a href="{% url 'admin_dashboard' %}" class="admin-btn-secondary">
@@ -173,6 +234,140 @@
             </button>
         </div>
     </form>
+
+    <!-- Manage Experiences Entries -->
+    <div class="admin-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                <i class="bi bi-briefcase mr-2"></i>
+                Experiences Entries
+            </h2>
+            <button onclick="openExperienceModal('add')" class="admin-btn-primary">
+                <i class="bi bi-plus-lg mr-2"></i>
+                Add Experience
+            </button>
+        </div>
+        {% if experiences_list %}
+        <div class="admin-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Title</th>
+                        <th>Organization</th>
+                        <th>Period</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exp in experiences_list %}
+                    <tr>
+                        <td>{{ exp.order }}</td>
+                        <td>
+                            <strong>{{ exp.title }}</strong>
+                            {% if exp.description %}
+                            <p style="font-size:0.75rem; color:var(--admin-text-muted); margin:0;">{{ exp.description|truncatewords:20 }}</p>
+                            {% endif %}
+                        </td>
+                        <td>{{ exp.organization }}</td>
+                        <td>{{ exp.period }}</td>
+                        <td>
+                            <span class="admin-badge {% if exp.is_active %}admin-badge-success{% else %}admin-badge-warning{% endif %}">
+                                {% if exp.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display:flex; justify-content:flex-end; gap:0.25rem;">
+                                <form method="post" action="{% url 'admin_experience_toggle_active' exp.id_str %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-btn-secondary" style="padding:0.35rem 0.85rem;">
+                                        {% if exp.is_active %}Deactivate{% else %}Activate{% endif %}
+                                    </button>
+                                </form>
+                                <button type="button" class="admin-btn-secondary" onclick="editExperience('{{ exp.id_str }}', '{{ exp.title|escapejs }}', '{{ exp.organization|escapejs }}', '{{ exp.period|escapejs }}', '{{ exp.description|escapejs }}', {{ exp.order }}, {{ exp.is_active|yesno:'true,false' }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="admin-btn-danger" onclick="deleteExperience('{{ exp.id_str }}', '{{ exp.title|escapejs }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-secondary">No experience entries yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- Manage Achievements Entries -->
+    <div class="admin-card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary);">
+                <i class="bi bi-award mr-2"></i>
+                Achievements Entries
+            </h2>
+            <button onclick="openAchievementModal('add')" class="admin-btn-primary">
+                <i class="bi bi-plus-lg mr-2"></i>
+                Add Achievement
+            </button>
+        </div>
+        {% if achievements_list %}
+        <div class="admin-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Title</th>
+                        <th>Year</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for achievement in achievements_list %}
+                    <tr>
+                        <td>{{ achievement.order }}</td>
+                        <td>
+                            <strong>{{ achievement.title }}</strong>
+                            {% if achievement.description %}
+                            <p style="font-size:0.75rem; color:var(--admin-text-muted); margin:0;">{{ achievement.description|truncatewords:20 }}</p>
+                            {% endif %}
+                        </td>
+                        <td>{{ achievement.year }}</td>
+                        <td>
+                            <span class="admin-badge {% if achievement.is_active %}admin-badge-success{% else %}admin-badge-warning{% endif %}">
+                                {% if achievement.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display:flex; justify-content:flex-end; gap:0.25rem;">
+                                <form method="post" action="{% url 'admin_achievement_toggle_active' achievement.id_str %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-btn-secondary" style="padding:0.35rem 0.85rem;">
+                                        {% if achievement.is_active %}Deactivate{% else %}Activate{% endif %}
+                                    </button>
+                                </form>
+                                <button type="button" class="admin-btn-secondary" onclick="editAchievement('{{ achievement.id_str }}', '{{ achievement.title|escapejs }}', '{{ achievement.description|escapejs }}', '{{ achievement.year|escapejs }}', '{{ achievement.link|escapejs }}', {{ achievement.order }}, {{ achievement.is_active|yesno:'true,false' }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="admin-btn-danger" onclick="deleteAchievement('{{ achievement.id_str }}', '{{ achievement.title|escapejs }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-secondary">No achievement entries yet.</p>
+        {% endif %}
+    </div>
     
     <!-- Manage Research Content -->
     <div class="admin-card" style="margin-bottom: 1.5rem;">
@@ -687,6 +882,102 @@
 </div>
 </div>
 
+<!-- Experience Entry Modal -->
+<div id="experienceModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:520px; margin:2rem; width:100%;">
+        <h3 id="experienceModalTitle" style="font-weight:600; margin-bottom:1.25rem; color:var(--admin-text-primary);">
+            Add Experience Entry
+        </h3>
+        <form id="experienceForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="experience_id" id="experience_id">
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Title</label>
+                <input type="text" name="title" id="exp_title" class="admin-form-input" required>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Organization</label>
+                <input type="text" name="organization" id="exp_organization" class="admin-form-input">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Period</label>
+                <input type="text" name="period" id="exp_period" class="admin-form-input" placeholder="e.g., 2021 - Present">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <textarea name="description" id="exp_description" class="admin-form-textarea" rows="3"></textarea>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Order</label>
+                <input type="number" name="order" id="exp_order" class="admin-form-input" value="0">
+            </div>
+
+            <div class="admin-form-group" style="display:flex; align-items:center; gap:0.5rem;">
+                <input type="checkbox" name="is_active" id="exp_active" checked style="width:1.25rem; height:1.25rem; cursor:pointer;">
+                <label for="exp_active" style="margin:0; cursor:pointer; color:var(--admin-text-primary);">Active</label>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" onclick="closeExperienceModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+                <button type="submit" class="admin-btn-success" style="flex:1; justify-content:center;">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Achievement Entry Modal -->
+<div id="achievementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    <div class="admin-card" style="max-width:520px; margin:2rem; width:100%;">
+        <h3 id="achievementModalTitle" style="font-weight:600; margin-bottom:1.25rem; color:var(--admin-text-primary);">
+            Add Achievement Entry
+        </h3>
+        <form id="achievementForm" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="achievement_id" id="achievement_id">
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Title</label>
+                <input type="text" name="title" id="ach_title" class="admin-form-input" required>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Year</label>
+                <input type="text" name="year" id="ach_year" class="admin-form-input" placeholder="e.g., 2023">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Link</label>
+                <input type="url" name="link" id="ach_link" class="admin-form-input" placeholder="https://">
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Description</label>
+                <textarea name="description" id="ach_description" class="admin-form-textarea" rows="3"></textarea>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Order</label>
+                <input type="number" name="order" id="ach_order" class="admin-form-input" value="0">
+            </div>
+
+            <div class="admin-form-group" style="display:flex; align-items:center; gap:0.5rem;">
+                <input type="checkbox" name="is_active" id="ach_active" checked style="width:1.25rem; height:1.25rem; cursor:pointer;">
+                <label for="ach_active" style="margin:0; cursor:pointer; color:var(--admin-text-primary);">Active</label>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" onclick="closeAchievementModal()" class="admin-btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+                <button type="submit" class="admin-btn-success" style="flex:1; justify-content:center;">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Research Category Modal -->
 <div id="researchCategoryModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
     <div class="admin-card" style="max-width:520px; margin:2rem; width:100%;">
@@ -918,6 +1209,66 @@
         document.getElementById('valueModal').style.display = 'none';
     }
     
+    function openExperienceModal(mode, id='', title='', organization='', period='', description='', order=0, isActive='true') {
+        document.getElementById('experienceForm').reset();
+        document.getElementById('experienceModalTitle').textContent = mode === 'edit' ? 'Edit Experience Entry' : 'Add Experience Entry';
+        document.getElementById('experience_id').value = mode === 'edit' ? id : '';
+        document.getElementById('exp_title').value = title;
+        document.getElementById('exp_organization').value = organization;
+        document.getElementById('exp_period').value = period;
+        document.getElementById('exp_description').value = description;
+        document.getElementById('exp_order').value = order;
+        document.getElementById('exp_active').checked = String(isActive) === 'true';
+        document.getElementById('experienceForm').action = mode === 'edit' ? `/admin/pages/about/experiences/${id}/edit/` : '{% url "admin_experience_create" %}';
+        document.getElementById('experienceModal').style.display = 'flex';
+    }
+
+    function editExperience(id, title, organization, period, description, order, isActive) {
+        openExperienceModal('edit', id, title, organization, period, description, order, isActive);
+    }
+
+    function closeExperienceModal() {
+        document.getElementById('experienceForm').reset();
+        document.getElementById('experience_id').value = '';
+        document.getElementById('experienceModal').style.display = 'none';
+    }
+
+    function deleteExperience(id, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = `/admin/pages/about/experiences/${id}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function openAchievementModal(mode, id='', title='', description='', year='', link='', order=0, isActive='true') {
+        document.getElementById('achievementForm').reset();
+        document.getElementById('achievementModalTitle').textContent = mode === 'edit' ? 'Edit Achievement Entry' : 'Add Achievement Entry';
+        document.getElementById('achievement_id').value = mode === 'edit' ? id : '';
+        document.getElementById('ach_title').value = title;
+        document.getElementById('ach_description').value = description;
+        document.getElementById('ach_year').value = year;
+        document.getElementById('ach_link').value = link;
+        document.getElementById('ach_order').value = order;
+        document.getElementById('ach_active').checked = String(isActive) === 'true';
+        document.getElementById('achievementForm').action = mode === 'edit' ? `/admin/pages/about/achievements/${id}/edit/` : '{% url "admin_achievement_create" %}';
+        document.getElementById('achievementModal').style.display = 'flex';
+    }
+
+    function editAchievement(id, title, description, year, link, order, isActive) {
+        openAchievementModal('edit', id, title, description, year, link, order, isActive);
+    }
+
+    function closeAchievementModal() {
+        document.getElementById('achievementForm').reset();
+        document.getElementById('achievement_id').value = '';
+        document.getElementById('achievementModal').style.display = 'none';
+    }
+
+    function deleteAchievement(id, name) {
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteForm').action = `/admin/pages/about/achievements/${id}/delete/`;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
     function deleteValue(id, name) {
         document.getElementById('deleteItemName').textContent = name;
         document.getElementById('deleteForm').action = `/admin/pages/about/values/${id}/delete/`;

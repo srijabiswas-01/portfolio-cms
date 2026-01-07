@@ -19,6 +19,8 @@ from .models import (
     ContactSubmission,
     CoreValue,
     Education,
+    Experience,
+    Achievement,
     HomePage,
     Interest,
     Profile,
@@ -107,6 +109,9 @@ def about(request):
         Q(is_active=True) | Q(is_active__exists=False)
     )
     
+    experiences = Experience.objects.filter(is_active=True).order_by("order", "-created_at")
+    achievements = Achievement.objects.filter(is_active=True).order_by("order", "-created_at")
+    
     latest_education = Education.objects.filter(order=0).order_by('-created_at').first()
     skill_count = Skill.objects.filter(is_active=True).count()
     research_count = ResearchEntry.objects.filter(
@@ -149,6 +154,8 @@ def about(request):
         'education': education,
         'interests': interests,
         'values_list': core_values,
+        'experiences': experiences,
+        'achievements': achievements,
         'core_values': core_values,
         'hero_stats': hero_stats,
         'research_data': research_data,
@@ -158,6 +165,8 @@ def about(request):
             'stats_section': getattr(about_page, 'show_stats_section', True),
             'interests': getattr(about_page, 'show_interests', True),
             'values': getattr(about_page, 'show_values', True),
+            'experiences': getattr(about_page, 'show_experiences_section', True),
+            'achievements': getattr(about_page, 'show_achievements_section', True),
         },
     }
     return render(request, 'public/about.html', context)

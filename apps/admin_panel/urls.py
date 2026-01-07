@@ -52,6 +52,14 @@ urlpatterns = [
     path('pages/about/education/<str:id>/edit/', views.education_edit, name='admin_education_edit'),
     path('pages/about/education/<str:id>/delete/', views.education_delete, name='admin_education_delete'),
     path('pages/about/education/<str:id>/toggle-active/', views.education_toggle_active, name='admin_education_toggle_active'),
+    path('pages/about/experiences/create/', views.experience_create, name='admin_experience_create'),
+    path('pages/about/experiences/<str:id>/edit/', views.experience_edit, name='admin_experience_edit'),
+    path('pages/about/experiences/<str:id>/delete/', views.experience_delete, name='admin_experience_delete'),
+    path('pages/about/experiences/<str:id>/toggle-active/', views.experience_toggle_active, name='admin_experience_toggle_active'),
+    path('pages/about/achievements/create/', views.achievement_create, name='admin_achievement_create'),
+    path('pages/about/achievements/<str:id>/edit/', views.achievement_edit, name='admin_achievement_edit'),
+    path('pages/about/achievements/<str:id>/delete/', views.achievement_delete, name='admin_achievement_delete'),
+    path('pages/about/achievements/<str:id>/toggle-active/', views.achievement_toggle_active, name='admin_achievement_toggle_active'),
     
     # Interest Management
     path('pages/about/interests/create/', views.interest_create, name='admin_interest_create'),

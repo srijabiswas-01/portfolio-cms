@@ -16,7 +16,7 @@ from apps.common_utils import get_document_or_404, get_singleton_document, skill
 from apps.public.models import (
     Profile, Skill, Project, Blog,
     HomePage, AboutPage, ContactPage,
-    Education, Interest, CoreValue,
+    Education, Experience, Interest, Achievement, CoreValue,
     ResearchCategory, ResearchEntry,
     ContactSubmission, SkillCategory,
 )
@@ -600,7 +600,9 @@ def about_page_manager(request):
     about_page = get_singleton_document(
         AboutPage,
         defaults={
-            'introduction': '<p>Write your introduction here...</p>'
+            'introduction': '<p>Write your introduction here...</p>',
+            'experiences_description': '<p>Highlight your hands-on experience and key roles.</p>',
+            'achievements_description': '<p>List awards, recognitions, and milestones.</p>',
         }
     )
     
@@ -612,11 +614,17 @@ def about_page_manager(request):
         about_page.interests_subtitle = request.POST.get('interests_subtitle')
         about_page.values_title = request.POST.get('values_title')
         about_page.values_subtitle = request.POST.get('values_subtitle')
+        about_page.experiences_title = request.POST.get('experiences_title')
+        about_page.experiences_description = request.POST.get('experiences_description')
+        about_page.achievements_title = request.POST.get('achievements_title')
+        about_page.achievements_description = request.POST.get('achievements_description')
         about_page.show_page_title = request.POST.get('show_page_title') == 'on'
         about_page.show_introduction = request.POST.get('show_introduction') == 'on'
         about_page.show_stats_section = request.POST.get('show_stats_section') == 'on'
         about_page.show_interests = request.POST.get('show_interests') == 'on'
         about_page.show_values = request.POST.get('show_values') == 'on'
+        about_page.show_experiences_section = request.POST.get('show_experiences_section') == 'on'
+        about_page.show_achievements_section = request.POST.get('show_achievements_section') == 'on'
         
         about_page.save()
         messages.success(request, 'About page content updated successfully!')
@@ -624,6 +632,8 @@ def about_page_manager(request):
     
     # Get related data
     education_list = Education.objects.all()
+    experiences_list = Experience.objects.order_by("order", "-created_at")
+    achievements_list = Achievement.objects.order_by("order", "-created_at")
     interests_list = Interest.objects.all()
     values_list = CoreValue.objects.all()
     research_categories = ResearchCategory.objects.all()
@@ -651,6 +661,8 @@ def about_page_manager(request):
         'education_list': education_list,
         'interests_list': interests_list,
         'values_list': values_list,
+        'experiences_list': experiences_list,
+        'achievements_list': achievements_list,
         'research_categories': research_categories,
         'research_entries': research_entries_page,
         'research_entries_total': research_entries_total,
@@ -711,6 +723,128 @@ def education_toggle_active(request, id):
         education.save()
         status = 'activated' if education.is_active else 'deactivated'
         messages.success(request, f'Education entry "{education.degree}" {status}.')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('admin_about_page_manager')
+
+
+# Experience CRUD
+@login_required
+def experience_create(request):
+    if request.method == 'POST':
+        try:
+            order = int(request.POST.get('order', 0))
+        except (TypeError, ValueError):
+            order = 0
+        experience = Experience(
+            title=request.POST.get('title'),
+            organization=request.POST.get('organization', ''),
+            period=request.POST.get('period', ''),
+            description=request.POST.get('description', ''),
+            order=order,
+            is_active=request.POST.get('is_active') == 'on',
+        )
+        experience.save()
+        messages.success(request, 'Experience entry added!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def experience_edit(request, id):
+    experience = get_document_or_404(Experience, id=id)
+    if request.method == 'POST':
+        experience.title = request.POST.get('title')
+        experience.organization = request.POST.get('organization', '')
+        experience.period = request.POST.get('period', '')
+        experience.description = request.POST.get('description', '')
+        try:
+            experience.order = int(request.POST.get('order', 0))
+        except (TypeError, ValueError):
+            experience.order = 0
+        experience.is_active = request.POST.get('is_active') == 'on'
+        experience.save()
+        messages.success(request, 'Experience entry updated!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def experience_delete(request, id):
+    experience = get_document_or_404(Experience, id=id)
+    if request.method == 'POST':
+        experience.delete()
+        messages.success(request, 'Experience entry deleted!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def experience_toggle_active(request, id):
+    experience = get_document_or_404(Experience, id=id)
+    if request.method == 'POST':
+        experience.is_active = not experience.is_active
+        experience.save()
+        status = 'activated' if experience.is_active else 'deactivated'
+        messages.success(request, f'Experience "{experience.title}" {status}.')
+    else:
+        messages.error(request, 'Invalid request method.')
+    return redirect('admin_about_page_manager')
+
+
+# Achievement CRUD
+@login_required
+def achievement_create(request):
+    if request.method == 'POST':
+        try:
+            order = int(request.POST.get('order', 0))
+        except (TypeError, ValueError):
+            order = 0
+        achievement = Achievement(
+            title=request.POST.get('title'),
+            description=request.POST.get('description', ''),
+            year=request.POST.get('year', ''),
+            link=request.POST.get('link', ''),
+            order=order,
+            is_active=request.POST.get('is_active') == 'on',
+        )
+        achievement.save()
+        messages.success(request, 'Achievement added!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def achievement_edit(request, id):
+    achievement = get_document_or_404(Achievement, id=id)
+    if request.method == 'POST':
+        achievement.title = request.POST.get('title')
+        achievement.description = request.POST.get('description', '')
+        achievement.year = request.POST.get('year', '')
+        achievement.link = request.POST.get('link', '')
+        try:
+            achievement.order = int(request.POST.get('order', 0))
+        except (TypeError, ValueError):
+            achievement.order = 0
+        achievement.is_active = request.POST.get('is_active') == 'on'
+        achievement.save()
+        messages.success(request, 'Achievement updated!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def achievement_delete(request, id):
+    achievement = get_document_or_404(Achievement, id=id)
+    if request.method == 'POST':
+        achievement.delete()
+        messages.success(request, 'Achievement deleted!')
+    return redirect('admin_about_page_manager')
+
+
+@login_required
+def achievement_toggle_active(request, id):
+    achievement = get_document_or_404(Achievement, id=id)
+    if request.method == 'POST':
+        achievement.is_active = not achievement.is_active
+        achievement.save()
+        status = 'activated' if achievement.is_active else 'deactivated'
+        messages.success(request, f'Achievement "{achievement.title}" {status}.')
     else:
         messages.error(request, 'Invalid request method.')
     return redirect('admin_about_page_manager')

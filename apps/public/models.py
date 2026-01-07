@@ -312,11 +312,17 @@ class AboutPage(SingletonDocument):
     show_stats_section = BooleanField(default=True)
     show_interests = BooleanField(default=True)
     show_values = BooleanField(default=True)
+    show_experiences_section = BooleanField(default=True)
+    show_achievements_section = BooleanField(default=True)
     show_education = BooleanField(default=True)
     interests_title = StringField(max_length=200, default="Interests & Passion")
     interests_subtitle = StringField(max_length=200, default="What drives me")
     values_title = StringField(max_length=200, default="Core Values")
     values_subtitle = StringField(max_length=200, default="Principles I live by")
+    experiences_title = StringField(max_length=200, default="Experiences")
+    experiences_description = StringField(default="")
+    achievements_title = StringField(max_length=200, default="Achievements")
+    achievements_description = StringField(default="")
 
     meta = {
         "collection": "about_page",
@@ -340,6 +346,35 @@ class Education(TimestampedDocument):
 
     def __str__(self):
         return f"{self.degree} - {self.institution}"
+
+
+class Experience(TimestampedDocument):
+    title = StringField(max_length=200, required=True)
+    organization = StringField(max_length=200, default="")
+    period = StringField(max_length=100, default="")
+    description = StringField()
+    order = IntField(default=0)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "experiences", "ordering": ["order", "-created_at"]}
+
+    def __str__(self):
+        org = f" at {self.organization}" if self.organization else ""
+        return f"{self.title}{org}"
+
+
+class Achievement(TimestampedDocument):
+    title = StringField(max_length=200, required=True)
+    description = StringField()
+    year = StringField(max_length=50, default="")
+    link = StringField(default="")
+    order = IntField(default=0)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "achievements", "ordering": ["order", "-created_at"]}
+
+    def __str__(self):
+        return self.title
 
 
 class Interest(TimestampedDocument):
