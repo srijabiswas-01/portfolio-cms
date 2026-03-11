@@ -1,0 +1,296 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Contact Page Manager - Admin Panel{% endblock %}
+{% block page_title %}Contact Page Content{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px;">
+    <form method="POST" id="contactPageForm">
+        {% csrf_token %}
+        
+        <!-- Page Header Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-chat-dots-fill text-primary mr-2"></i>
+                Page Header
+            </h2>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="page_title">Page Title</label>
+                <input type="text" 
+                       id="page_title" 
+                       name="page_title" 
+                       class="admin-form-input"
+                       value="{{ contact_page.page_title }}"
+                       placeholder="Get In Touch"
+                       style="font-size: 1.25rem; font-weight: 600;">
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="page_subtitle">Page Subtitle</label>
+                <textarea id="page_subtitle" 
+                          name="page_subtitle" 
+                          class="admin-form-textarea"
+                          rows="3"
+                          placeholder="Brief description for the contact page...">{{ contact_page.page_subtitle }}</textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Page Title</label>
+                    <input type="checkbox"
+                           name="show_page_title"
+                           {% if contact_page.show_page_title %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Page Subtitle</label>
+                    <input type="checkbox"
+                           name="show_page_subtitle"
+                           {% if contact_page.show_page_subtitle %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Connect Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-link-45deg text-info mr-2"></i>
+                Connect Section
+            </h2>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="connect_title">Section Title</label>
+                <input type="text" 
+                       id="connect_title" 
+                       name="connect_title" 
+                       class="admin-form-input"
+                       value="{{ contact_page.connect_title }}"
+                       placeholder="Let's Connect">
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label">Connect Description (Rich Text)</label>
+                <div id="quill-connect" style="min-height: 250px;">
+                    {{ contact_page.connect_description|safe }}
+                </div>
+                <input type="hidden" id="connect_description" name="connect_description">
+                <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                    This text appears in the contact information section
+                </p>
+            </div>
+        </div>
+        
+        <!-- Contact Information Display Settings -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-info-circle-fill text-warning mr-2"></i>
+                Contact Information Display
+            </h2>
+            
+            <div class="admin-alert admin-alert-info" style="margin-bottom: 1.5rem;">
+                <i class="bi bi-info-circle"></i>
+                <span>Email is always shown and taken from your Profile settings. Configure other contact info below.</span>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                <input type="checkbox" 
+                       id="show_phone" 
+                       name="show_phone" 
+                       {% if contact_page.show_phone %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                <label for="show_phone" style="color: var(--admin-text-primary); cursor: pointer;">
+                    <i class="bi bi-telephone mr-2"></i>
+                    Show Phone Number
+                </label>
+            </div>
+            
+            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                <input type="checkbox" 
+                       id="show_location" 
+                       name="show_location" 
+                       {% if contact_page.show_location %}checked{% endif %}
+                       style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; cursor: pointer;">
+                <label for="show_location" style="color: var(--admin-text-primary); cursor: pointer;">
+                    <i class="bi bi-geo-alt mr-2"></i>
+                    Show Location
+                </label>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="location_text">Location Text</label>
+                <input type="text" 
+                       id="location_text" 
+                       name="location_text" 
+                       class="admin-form-input"
+                       value="{{ contact_page.location_text }}"
+                       placeholder="India">
+                <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
+                    Displayed when "Show Location" is enabled
+                </p>
+            </div>
+        </div>
+
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-eye-fill text-warning mr-2"></i>
+                Section Visibility
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Connect Section</label>
+                    <input type="checkbox"
+                           name="show_connect_section"
+                           {% if contact_page.show_connect_section %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Contact Info</label>
+                    <input type="checkbox"
+                           name="show_contact_info"
+                           {% if contact_page.show_contact_info %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show Contact Form</label>
+                    <input type="checkbox"
+                           name="show_contact_form"
+                           {% if contact_page.show_contact_form %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Show CTA Section</label>
+                    <input type="checkbox"
+                           name="show_cta_section"
+                           {% if contact_page.show_cta_section %}checked{% endif %}
+                           style="width: 1.25rem; height: 1.25rem; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Call to Action Section -->
+        <div class="admin-card" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 1.5rem;">
+                <i class="bi bi-megaphone-fill text-success mr-2"></i>
+                Call to Action Section
+            </h2>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="cta_title">CTA Title</label>
+                <input type="text" 
+                       id="cta_title" 
+                       name="cta_title" 
+                       class="admin-form-input"
+                       value="{{ contact_page.cta_title }}"
+                       placeholder="Ready to Start a Project?">
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="cta_description">CTA Description</label>
+                <textarea id="cta_description" 
+                          name="cta_description" 
+                          class="admin-form-textarea"
+                          rows="3"
+                          placeholder="Let's work together to bring your ideas to life.">{{ contact_page.cta_description }}</textarea>
+            </div>
+            
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="cta_button_text">CTA Button Text</label>
+                <input type="text" 
+                       id="cta_button_text" 
+                       name="cta_button_text" 
+                       class="admin-form-input"
+                       value="{{ contact_page.cta_button_text }}"
+                       placeholder="View My Work">
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <a href="{% url 'admin_dashboard' %}" class="admin-btn-secondary">
+                <i class="bi bi-x-lg mr-2"></i>
+                Cancel
+            </a>
+            <button type="submit" class="admin-btn-success">
+                <i class="bi bi-check-lg mr-2"></i>
+                Save Changes
+            </button>
+        </div>
+    </form>
+    
+    <!-- Info Panel -->
+    <div class="admin-card" style="margin-top: 2rem;">
+        <h3 style="font-weight: 600; color: var(--admin-text-primary); margin-bottom: 1rem;">
+            <i class="bi bi-lightbulb-fill text-warning mr-2"></i>
+            Contact Form Information
+        </h3>
+        <div style="color: var(--admin-text-secondary); font-size: 0.875rem; line-height: 1.8;">
+            <p style="margin-bottom: 0.75rem;">
+                <strong>Contact Form:</strong> The contact form on the page uses a "mailto" link that opens the user's email client with pre-filled information.
+            </p>
+            <p style="margin-bottom: 0.75rem;">
+                <strong>Email Address:</strong> The form sends to the email address set in your Profile settings.
+            </p>
+            <p style="margin-bottom: 0.75rem;">
+                <strong>Social Links:</strong> Social media links are automatically pulled from your Profile settings.
+            </p>
+            <div class="admin-alert admin-alert-info" style="margin-top: 1rem;">
+                <i class="bi bi-gear"></i>
+                <span>To update email, phone, or social links, go to <a href="{% url 'admin_profile_manager' %}" style="color: var(--admin-accent-primary); text-decoration: underline;">Profile Settings</a></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Preview Section -->
+    <div class="admin-card" style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-weight: 600; color: var(--admin-text-primary);">
+                <i class="bi bi-eye mr-2"></i>
+                Live Preview
+            </h3>
+            <a href="{% url 'contact' %}" target="_blank" class="admin-btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                <i class="bi bi-box-arrow-up-right mr-1"></i>
+                View Live Page
+            </a>
+        </div>
+        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
+            Save your changes and refresh the contact page to see updates.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Quill Editor for Connect Description
+    var quillConnect = new Quill('#quill-connect', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Write a welcoming message for visitors...'
+    });
+    
+    // Form submission - save Quill content
+    document.getElementById('contactPageForm').addEventListener('submit', function(e) {
+        // Get Quill content
+        var connectContent = quillConnect.root.innerHTML;
+        document.getElementById('connect_description').value = connectContent;
+        
+        // Validate content
+        if (quillConnect.getText().trim().length === 0) {
+            e.preventDefault();
+            alert('Please add connect description content');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

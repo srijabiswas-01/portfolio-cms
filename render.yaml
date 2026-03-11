@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: portfolio-cms
+    env: python
+    pythonVersion: 3.10.13
+
+    buildCommand: |
+      pip install -r requirements.txt
+      SKIP_MONGO_CONNECT=1 python manage.py migrate --noinput --skip-checks
+      SKIP_MONGO_CONNECT=1 python scripts/create_superuser.py
+      SKIP_MONGO_CONNECT=1 python manage.py collectstatic --noinput --skip-checks
+
+    startCommand: |
+      gunicorn portfolio_project.wsgi:application

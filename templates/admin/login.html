@@ -1,0 +1,156 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Portfolio</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="{% static 'css/base-admin.css' %}">
+</head>
+<body class="admin-body" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1A1F36 0%, #0F172A 100%);">
+    
+    <!-- Login Container -->
+    <div style="width: 100%; max-width: 450px; padding: 2rem;">
+        
+        <!-- Login Card -->
+        <div style="background: var(--admin-bg-card); border: 1px solid var(--admin-border-color); border-radius: 1rem; padding: 3rem; box-shadow: var(--admin-shadow-lg);">
+            
+            <!-- Logo -->
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 80px; height: 80px; background: var(--admin-accent-primary); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 30px rgba(92, 124, 250, 0.3);">
+                    <i class="bi bi-shield-lock" style="font-size: 2.5rem; color: white;"></i>
+                </div>
+                <h1 style="font-size: 2rem; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
+                    Admin Login
+                </h1>
+                <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
+                    Enter your credentials to access the admin panel
+                </p>
+            </div>
+            
+            <!-- Messages/Alerts -->
+            {% if messages %}
+            <div style="margin-bottom: 1.5rem;">
+                {% for message in messages %}
+                <div class="admin-alert admin-alert-{{ message.tags }}">
+                    <i class="bi bi-{% if message.tags == 'error' %}x-circle{% else %}info-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'admin_login' %}">
+                {% csrf_token %}
+                
+                <!-- Username -->
+                <div class="admin-form-group">
+                    <label for="username" class="admin-form-label">
+                        <i class="bi bi-person mr-1"></i>
+                        Username
+                    </label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           required
+                           autofocus
+                           class="admin-form-input"
+                           placeholder="Enter your username">
+                </div>
+                
+                <!-- Password -->
+                <div class="admin-form-group">
+                    <label for="password" class="admin-form-label">
+                        <i class="bi bi-lock mr-1"></i>
+                        Password
+                    </label>
+                    <div style="position: relative;">
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               required
+                               class="admin-form-input"
+                               placeholder="Enter your password">
+                        <button type="button" 
+                                onclick="togglePassword()"
+                                style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--admin-text-muted); background: none; border: none; cursor: pointer;">
+                            <i class="bi bi-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Remember Me -->
+                <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <input type="checkbox" 
+                           id="remember" 
+                           name="remember"
+                           style="width: 1rem; height: 1rem; margin-right: 0.5rem; cursor: pointer;">
+                    <label for="remember" style="color: var(--admin-text-secondary); font-size: 0.875rem; cursor: pointer;">
+                        Remember me
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" class="admin-btn-primary" style="width: 100%; justify-content: center; padding: 0.875rem;">
+                    <i class="bi bi-box-arrow-in-right mr-2"></i>
+                    Sign In
+                </button>
+            </form>
+            
+            <!-- Back to Site Link -->
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--admin-border-color);">
+                <a href="{% url 'home' %}" style="color: var(--admin-accent-primary); text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Website
+                </a>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="text-align: center; margin-top: 2rem; color: var(--admin-text-muted); font-size: 0.875rem;">
+            <p>&copy; 2024 Portfolio Admin Panel. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.admin-alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

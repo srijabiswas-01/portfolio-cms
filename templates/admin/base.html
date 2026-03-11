@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    
+    <!-- Quill JS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="{% static 'css/base-admin.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+    
+    <!-- Background Effect -->
+    <div class="admin-bg-effect"></div>
+    
+    <!-- Mobile Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="admin-sidebar-header">
+            <a href="{% url 'admin_dashboard' %}" class="admin-sidebar-logo">
+                <img 
+                    src="{% static 'images/favicon.png' %}" 
+                    alt="Logo"
+                    style="height: 24px; width: 24px; margin-right: 0.5rem;"
+                >
+                <span style="color: var(--admin-accent-primary);">Admin</span>
+                <span style="color: white;">.Panel</span>
+            </a>
+            
+            <!-- Close button for mobile -->
+            <button id="closeSidebar" class="close-sidebar-btn" onclick="closeMobileSidebar()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <!-- Sidebar Menu -->
+        <nav class="admin-sidebar-menu">
+            <!-- Dashboard -->
+            <a href="{% url 'admin_dashboard' %}" class="admin-sidebar-link {% if request.path == '/admin/dashboard/' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <!-- Content Management Section -->
+            <div class="sidebar-section-title">
+                <p>Content Management</p>
+            </div>
+            
+            <!-- Pages Submenu -->
+            <div class="sidebar-submenu-wrapper">
+                <div class="admin-sidebar-link sidebar-submenu-toggle" onclick="toggleSubmenu('pagesSubmenu')">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Pages</span>
+                    <i class="bi bi-chevron-down submenu-icon" id="pagesSubmenuIcon"></i>
+                </div>
+                {% comment %} <div id="pagesSubmenu" class="sidebar-submenu"> {% endcomment %}
+                <div id="pagesSubmenu" class="sidebar-submenu {% if 'admin/pages' in request.path %}active{% endif %}">
+
+                    <a href="{% url 'admin_home_page_manager' %}" class="admin-sidebar-link submenu-item {% if 'pages/home' in request.path %}active{% endif %}">
+                        <i class="bi bi-house-door"></i>
+                        <span>Home Page</span>
+                    </a>
+                    <a href="{% url 'admin_about_page_manager' %}" class="admin-sidebar-link submenu-item {% if 'pages/about' in request.path %}active{% endif %}">
+                        <i class="bi bi-person"></i>
+                        <span>About Page</span>
+                    </a>
+                    <a href="{% url 'admin_contact_page_manager' %}" class="admin-sidebar-link submenu-item {% if 'pages/contact' in request.path %}active{% endif %}">
+                        <i class="bi bi-envelope"></i>
+                        <span>Contact Page</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Blogs -->
+            <a href="{% url 'admin_blogs_list' %}" class="admin-sidebar-link {% if 'blog' in request.path %}active{% endif %}">
+                <i class="bi bi-file-text"></i>
+                <span>Blogs</span>
+            </a>
+            
+            <!-- Projects -->
+            <a href="{% url 'admin_project_manager' %}" class="admin-sidebar-link {% if 'project' in request.path %}active{% endif %}">
+                <i class="bi bi-folder"></i>
+                <span>Projects</span>
+            </a>
+            
+            <!-- Skills -->
+            <a href="{% url 'admin_skills_manager' %}" class="admin-sidebar-link {% if 'skill' in request.path %}active{% endif %}">
+                <i class="bi bi-star"></i>
+                <span>Skills</span>
+            </a>
+            
+            <!-- Contact Submissions -->
+            <a href="{% url 'admin_contact_submissions' %}" class="admin-sidebar-link {% if 'contact-submissions' in request.path %}active{% endif %}">
+                <i class="bi bi-inbox"></i>
+                <span>Contact Submissions</span>
+                {% if unread_count > 0 %}
+                <span class="notification-badge">{{ unread_count }}</span>
+                {% endif %}
+            </a>
+            
+            <!-- Settings Section -->
+            <div class="sidebar-section-title">
+                <p>Settings</p>
+            </div>
+            
+            <!-- Profile -->
+            <a href="{% url 'admin_profile_manager' %}" class="admin-sidebar-link {% if 'profile' in request.path %}active{% endif %}">
+                <i class="bi bi-person-circle"></i>
+                <span>Profile</span>
+            </a>
+            
+            <div class="sidebar-divider"></div>
+            
+            <!-- View Site -->
+            <a href="{% url 'home' %}" class="admin-sidebar-link" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>View Site</span>
+            </a>
+            
+            <!-- Logout -->
+            <a href="{% url 'admin_logout' %}" class="admin-sidebar-link">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Logout</span>
+            </a>
+        </nav>
+        
+        <!-- User Info at Bottom -->
+        <div class="admin-sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div class="user-details">
+                    <p class="user-name">{{ request.user.username }}</p>
+                    <p class="user-role">Administrator</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <button id="menuToggle" class="mobile-menu-toggle" onclick="openMobileSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h1 class="page-title">
+                    {% block page_title %}Dashboard{% endblock %}
+                </h1>
+            </div>
+            
+            <div class="header-right">
+                <span class="current-time">
+                    <i class="bi bi-clock"></i>
+                    <span id="currentTime"></span>
+                </span>
+            </div>
+        </header>
+        
+        <!-- Content Area -->
+        <div class="admin-content">
+            <!-- Messages/Alerts -->
+            {% if messages %}
+            <div class="alerts-container">
+                {% for message in messages %}
+                <div class="admin-alert admin-alert-{{ message.tags }}">
+                    <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}x-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                    <span>{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <script>
+        // Mobile sidebar functions
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.add('mobile-active');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('mobile-active');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Submenu toggle
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const icon = document.getElementById(id + 'Icon');
+            
+            if (submenu.classList.contains('active')) {
+                submenu.classList.remove('active');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                submenu.classList.add('active');
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            }
+        }
+        
+        {% comment %} // Auto-expand Pages submenu if on a pages route
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.pathname.includes('/admin/pages/')) {
+                toggleSubmenu('pagesSubmenu');
+            }
+        }); {% endcomment %}
+        document.addEventListener('DOMContentLoaded', function() {
+    const submenu = document.getElementById('pagesSubmenu');
+    const icon = document.getElementById('pagesSubmenuIcon');
+
+    if (submenu && window.location.pathname.includes('/admin/pages/')) {
+        submenu.classList.add('active');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+});
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+            const timeElement = document.getElementById('currentTime');
+            if (timeElement) {
+                timeElement.textContent = timeStr;
+            }
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.admin-alert');
+            alerts.forEach(alert => {
+                alert.style.transition = 'opacity 0.5s ease';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+        
+        // Close sidebar on window resize to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024) {
+                closeMobileSidebar();
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

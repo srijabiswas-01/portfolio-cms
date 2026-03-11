@@ -1,0 +1,322 @@
+<!-- templates/public/about.html -->
+{% extends 'public/base.html' %}
+
+{% block title %}About Me - Portfolio{% endblock %}
+
+{% block content %}
+<!-- About Hero Section -->
+<section class="py-20">
+    <div class="container mx-auto px-4">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <!-- Profile Image Section -->
+            <div class="relative">
+                <div class="relative w-full max-w-md mx-auto">
+                    <!-- Decorative Background -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-accent-primary/30 to-accent-secondary/30 rounded-2xl transform rotate-6"></div>
+                    
+                    <!-- Profile Card -->
+                    <div class="relative bg-card border border-color rounded-2xl p-8 shadow-lg">
+                        <div class="aspect-square rounded-xl overflow-hidden mb-6 bg-secondary">
+                            {% if profile.image %}
+                            <img src="{{ profile.image.url }}" alt="Profile" class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                <i class="bi bi-person-circle text-9xl text-accent-primary/30"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold font-poppins mb-2">{{ profile.name }}</h3>
+                            <p class="text-accent-primary font-medium mb-4">{{ profile.role }}</p>
+                            
+                            <!-- Social Links -->
+                            <div class="flex justify-center gap-3">
+                                <a href="{{ profile.github }}" target="_blank" class="social-icon-small">
+                                    <i class="bi bi-github"></i>
+                                </a>
+                                <a href="{{ profile.linkedin }}" target="_blank" class="social-icon-small">
+                                    <i class="bi bi-linkedin"></i>
+                                </a>
+                                <a href="mailto:{{ profile.email }}" class="social-icon-small">
+                                    <i class="bi bi-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- About Content -->
+            <div class="space-y-6">
+                {% if about_page_visibility.page_title %}
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-4">
+                        {{ about_page.page_title|default:"About Me" }}
+                    </h1>
+                    <div class="w-20 h-1 bg-accent-primary rounded-full mb-6"></div>
+                </div>
+                {% endif %}
+                
+                {% if about_page_visibility.introduction %}
+                <div class="space-y-4 text-secondary leading-relaxed">
+                    {% if about_page.introduction %}
+                        {{ about_page.introduction|safe }}
+                    {% else %}
+                    <p>
+                        {{ profile.bio }}
+                    </p>
+                    
+                    <p>
+                        Currently pursuing MCA (Master of Computer Applications) with a focus on 
+                        <span class="text-accent-primary font-medium">Data Science</span>, 
+                        <span class="text-accent-primary font-medium">Artificial Intelligence</span>, and 
+                        <span class="text-accent-primary font-medium">Machine Learning</span>.
+                    </p>
+                    
+                    <p>
+                        I'm passionate about building intelligent solutions that solve real-world problems 
+                        and creating impactful web applications that enhance user experiences.
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if about_page_visibility.stats_section %}
+                <div class="grid grid-cols-2 gap-4 pt-4">
+                    {% for stat in hero_stats %}
+                    <div class="stat-card">
+                        <i class="bi {{ stat.icon }} text-3xl text-accent-primary mb-2"></i>
+                        <p class="text-2xl font-bold">{{ stat.value }}</p>
+                        <p class="text-sm text-muted">{{ stat.subtitle }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="pt-4">
+                    <a href="{{ profile.resume }}" download class="btn-primary">
+                        <i class="bi bi-download mr-2"></i>
+                        Download Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if research_data %}
+        <section class="py-16">
+            <div class="text-center mb-10">
+                <h2 class="section-title">Research &amp; Articles</h2>
+                <p class="section-subtitle">Documented findings, publications, and journal work.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+                {% for block in research_data %}
+                <div class="timeline-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-xl font-semibold">{{ block.category.name }}</h3>
+                            <p class="text-sm text-muted">{{ block.category.description }}</p>
+                        </div>
+                        <i class="bi bi-journal-text text-2xl text-accent-primary"></i>
+                    </div>
+                    {% if block.entries %}
+                    <div class="space-y-4">
+                        {% for entry in block.entries %}
+                        <div class="timeline-card mb-4 last:mb-0 border">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h4 class="text-lg font-bold">{{ entry.title }}</h4>
+                                    <p class="text-sm text-muted">{{ entry.publication }}</p>
+                                </div>
+                                {% if entry.link %}
+                                <a href="{{ entry.link }}" target="_blank" class="text-accent-primary font-semibold text-sm hover:underline">
+                                    View
+                                </a>
+                                {% endif %}
+                            </div>
+                            <p class="text-secondary text-sm mt-3">{{ entry.description }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-secondary text-sm">No entries yet.</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</section>
+
+{% if about_page.show_education %}
+<!-- Education Section -->
+<section class="py-20 bg-secondary">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="section-title">Education</h2>
+            <p class="section-subtitle">My academic journey</p>
+        </div>
+        
+        <div class="max-w-3xl mx-auto space-y-6">
+            {% for edu in education %}
+            <div class="timeline-card">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-accent-primary rounded-full flex items-center justify-center">
+                            <i class="bi bi-mortarboard text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-xl font-bold font-poppins">{{ edu.degree }}</h3>
+                                <p class="text-accent-primary font-medium">{{ edu.institution }}</p>
+                            </div>
+                            <span class="text-sm text-muted">{{ edu.year }}</span>
+                        </div>
+                        <p class="text-secondary text-sm">{{ edu.description }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+        {% if about_page_visibility.experiences %}
+        <section class="py-20 bg-secondary">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-10">
+                    <h2 class="section-title">{{ about_page.experiences_title|default:"Experiences" }}</h2>
+                    <p class="section-subtitle text-muted">
+                        {{ about_page.experiences_description|default:"Describe your key roles and the impact you have delivered."|safe }}
+                    </p>
+                </div>
+
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    {% if experiences %}
+                    {% for exp in experiences %}
+                    <div class="timeline-card">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h4 class="text-lg font-bold">{{ exp.title }}</h4>
+                                {% if exp.organization %}
+                                <p class="text-sm text-muted">{{ exp.organization }}</p>
+                                {% endif %}
+                            </div>
+                            {% if exp.period %}
+                            <span class="text-sm text-accent-primary font-semibold">{{ exp.period }}</span>
+                            {% endif %}
+                        </div>
+                        {% if exp.description %}
+                        <p class="text-secondary text-sm mt-3">{{ exp.description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-secondary text-sm text-center">No experiences added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if about_page_visibility.achievements %}
+        <section class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-10">
+                    <h2 class="section-title">{{ about_page.achievements_title|default:"Achievements" }}</h2>
+                    <p class="section-subtitle text-muted">
+                        {{ about_page.achievements_description|default:"Share awards, speaking engagements, certifications, or milestone wins."|safe }}
+                    </p>
+                </div>
+                <div class="space-y-4 max-w-4xl mx-auto">
+                    {% if achievements %}
+                    {% for achievement in achievements %}
+                    <div class="timeline-card">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h4 class="text-lg font-bold">{{ achievement.title }}</h4>
+                                {% if achievement.year %}
+                                <p class="text-sm text-muted">{{ achievement.year }}</p>
+                                {% endif %}
+                            </div>
+                            {% if achievement.link %}
+                            <a href="{{ achievement.link }}" target="_blank" class="text-sm text-accent-primary font-semibold hover:underline">
+                                View
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% if achievement.description %}
+                        <p class="text-secondary text-sm mt-3">{{ achievement.description }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-secondary text-sm text-center">No achievements added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        {% if about_page_visibility.interests %}
+        <!-- Interests Section -->
+        <section class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="section-title">{{ about_page.interests_title }}</h2>
+                    <p class="section-subtitle">{{ about_page.interests_subtitle }}</p>
+                </div>
+                {% if interests %}
+                <div class="grid md:grid-cols-4 gap-6">
+                    {% for interest in interests %}
+                    <div class="interest-card">
+                        <i class="bi bi-{{ interest.icon }} text-4xl text-accent-primary mb-4"></i>
+                        <h3 class="font-semibold mb-2">{{ interest.title }}</h3>
+                        <p class="text-sm text-muted">{{ interest.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <p class="text-secondary">No interests added yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if about_page_visibility.values %}
+        <!-- Values Section -->
+        <section class="py-20 bg-secondary">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="section-title">{{ about_page.values_title }}</h2>
+                    <p class="section-subtitle">{{ about_page.values_subtitle }}</p>
+                </div>
+                {% if values_list %}
+                <div class="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    {% for value in values_list %}
+                    {% with color=value.color|default:"accent-primary" %}
+                    <div class="value-card">
+                        <div class="w-16 h-16 bg-{{ color }}\/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="bi bi-{{ value.icon }} text-3xl text-{{ color }}"></i>
+                        </div>
+                        <h3 class="text-xl font-bold font-poppins mb-3">{{ value.title }}</h3>
+                        <p class="text-secondary text-sm">{{ value.description }}</p>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <p class="text-secondary">No core values added yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+{% endblock %}
+
+{% block extra_styles %}{% endblock %}
