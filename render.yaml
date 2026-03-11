@@ -11,4 +11,6 @@ services:
       SKIP_MONGO_CONNECT=1 python manage.py collectstatic --noinput --skip-checks
 
     startCommand: |
+      python manage.py migrate --noinput &&
+      python scripts/create_superuser.py &&
       gunicorn portfolio_project.wsgi:application

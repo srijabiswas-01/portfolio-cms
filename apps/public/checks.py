@@ -12,8 +12,8 @@ def mongodb_connection_check(app_configs, **kwargs):
     """
     Ensure that Django can connect to MongoDB Atlas using the configured URI.
     """
-    # Keep deploy/runtime startup resilient: this check is useful for explicit
-    # `manage.py check`, but should not break `migrate`/`collectstatic`.
+
+    # Prevent deployment crashes on Render or migrations
     if os.environ.get("ENABLE_STRICT_MONGO_CHECK", "0") != "1":
         return []
 

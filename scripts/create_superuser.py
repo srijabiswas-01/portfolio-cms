@@ -9,8 +9,10 @@ def configure_paths() -> None:
     base_dir = Path(__file__).resolve().parent.parent
     sys.path.append(str(base_dir))
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "portfolio_project.settings")
+
     # This script only needs Django auth (SQLite), not MongoEngine.
     os.environ.setdefault("SKIP_MONGO_CONNECT", "1")
+
 
 
 def main() -> None:
@@ -41,5 +43,7 @@ if __name__ == "__main__":
         main()
     except ImproperlyConfigured as exc:
         sys.stderr.write(f"Skipped creating superuser: {exc}\n")
+
     except Exception as exc:
         sys.stderr.write(f"Skipped creating superuser due to runtime error: {exc}\n")
+

@@ -62,6 +62,14 @@ if not SKIP_MONGO_CONNECT:
         host=MONGODB_URI,
         alias="default",
     )
+MONGODB_URI = config("MONGODB_URI")
+DATABASE_NAME = config("DATABASE_NAME")
+
+mongoengine.connect(
+    db=DATABASE_NAME,
+    host=MONGODB_URI,
+    alias="default",
+)
 
 
 # --------------------------------------------------
