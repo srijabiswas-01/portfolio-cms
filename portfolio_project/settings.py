@@ -47,29 +47,43 @@ ALLOWED_HOSTS = config(
 # --------------------------------------------------
 # MongoDB (MongoEngine)
 # --------------------------------------------------
-MONGODB_URI = config("MONGODB_URI", default="").strip().strip('"').strip("'")
+# MONGODB_URI = config("MONGODB_URI", default="").strip().strip('"').strip("'")
+# DATABASE_NAME = config("DATABASE_NAME", default="")
+# SKIP_MONGO_CONNECT = config("SKIP_MONGO_CONNECT", default=False, cast=bool)
+
+# if not SKIP_MONGO_CONNECT:
+#     if not MONGODB_URI:
+#         raise ImproperlyConfigured("MONGODB_URI is required when SKIP_MONGO_CONNECT is false.")
+#     if not DATABASE_NAME:
+#         raise ImproperlyConfigured("DATABASE_NAME is required when SKIP_MONGO_CONNECT is false.")
+
+#     mongoengine.connect(
+#         db=DATABASE_NAME,
+#         host=MONGODB_URI,
+#         alias="default",
+#     )
+# MONGODB_URI = config("MONGODB_URI")
+# DATABASE_NAME = config("DATABASE_NAME")
+
+# mongoengine.connect(
+#     db=DATABASE_NAME,
+#     host=MONGODB_URI,
+#     alias="default",
+# )
+
+# --------------------------------------------------
+# MongoDB (MongoEngine)
+# --------------------------------------------------
+MONGODB_URI = config("MONGODB_URI", default="")
 DATABASE_NAME = config("DATABASE_NAME", default="")
 SKIP_MONGO_CONNECT = config("SKIP_MONGO_CONNECT", default=False, cast=bool)
 
-if not SKIP_MONGO_CONNECT:
-    if not MONGODB_URI:
-        raise ImproperlyConfigured("MONGODB_URI is required when SKIP_MONGO_CONNECT is false.")
-    if not DATABASE_NAME:
-        raise ImproperlyConfigured("DATABASE_NAME is required when SKIP_MONGO_CONNECT is false.")
-
+if not SKIP_MONGO_CONNECT and MONGODB_URI and DATABASE_NAME:
     mongoengine.connect(
         db=DATABASE_NAME,
         host=MONGODB_URI,
         alias="default",
     )
-MONGODB_URI = config("MONGODB_URI")
-DATABASE_NAME = config("DATABASE_NAME")
-
-mongoengine.connect(
-    db=DATABASE_NAME,
-    host=MONGODB_URI,
-    alias="default",
-)
 
 
 # --------------------------------------------------
