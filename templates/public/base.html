@@ -97,10 +97,18 @@
                 <div>
                     <h3 class="text-lg font-semibold font-poppins mb-4">Connect</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="social-icon"><i class="bi bi-github"></i></a>
-                        <a href="#" class="social-icon"><i class="bi bi-linkedin"></i></a>
-                        <a href="#" class="social-icon"><i class="bi bi-envelope"></i></a>
-                        <a href="#" class="social-icon"><i class="bi bi-twitter"></i></a>
+                        {% if profile.github %}
+                        <a href="{{ profile.github }}" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="GitHub"><i class="bi bi-github"></i></a>
+                        {% endif %}
+                        {% if profile.linkedin %}
+                        <a href="{{ profile.linkedin }}" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                        {% endif %}
+                        {% if profile.email %}
+                        <a href="mailto:{{ profile.email }}" class="social-icon" aria-label="Email"><i class="bi bi-envelope"></i></a>
+                        {% endif %}
+                        {% if profile.twitter %}
+                        <a href="{{ profile.twitter }}" target="_blank" rel="noopener noreferrer" class="social-icon" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

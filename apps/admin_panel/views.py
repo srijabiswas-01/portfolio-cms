@@ -505,6 +505,15 @@ def profile_manager(request):
         github = request.POST.get('github', '')
         linkedin = request.POST.get('linkedin', '')
         twitter = request.POST.get('twitter', '')
+        image = request.FILES.get('image')
+
+        if image:
+            if not (image.content_type or '').startswith('image/'):
+                messages.error(request, 'Please upload a valid image file.')
+                return redirect('admin_profile_manager')
+            if image.size > 5 * 1024 * 1024:
+                messages.error(request, 'Profile image must be 5 MB or smaller.')
+                return redirect('admin_profile_manager')
         
         if profile:
             # Update existing profile
@@ -517,10 +526,10 @@ def profile_manager(request):
             profile.linkedin = linkedin
             profile.twitter = twitter
             
-            if request.FILES.get('image'):
+            if image:
                 if profile.image_path:
                     default_storage.delete(profile.image_path)
-                profile.image = request.FILES.get('image')
+                profile.image = image
             if request.FILES.get('resume'):
                 if profile.resume_path:
                     default_storage.delete(profile.resume_path)
@@ -540,8 +549,8 @@ def profile_manager(request):
                 linkedin=linkedin,
                 twitter=twitter,
             )
-            if request.FILES.get('image'):
-                profile.image = request.FILES.get('image')
+            if image:
+                profile.image = image
             if request.FILES.get('resume'):
                 profile.resume = request.FILES.get('resume')
             profile.save()

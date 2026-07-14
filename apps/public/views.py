@@ -2,7 +2,7 @@
 
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
 from mongoengine.queryset.visitor import Q
@@ -81,6 +81,22 @@ def home(request):
         'typing_texts': typing_texts,
     }
     return render(request, 'public/home.html', context)
+
+
+def profile_image(request):
+    """Serve the current profile image stored in MongoDB."""
+    profile = Profile.objects.first()
+    if not profile or not profile.image_data:
+        raise Http404("Profile image not found")
+
+    response = HttpResponse(
+        bytes(profile.image_data),
+        content_type=profile.image_content_type or "image/jpeg",
+    )
+    response["Content-Disposition"] = "inline"
+    response["Cache-Control"] = "no-cache"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 def about(request):

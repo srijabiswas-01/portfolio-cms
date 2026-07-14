@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from mongoengine import (
+    BinaryField,
     BooleanField,
     DateTimeField,
     Document,
@@ -24,14 +25,17 @@ def _now():
 class StoredFileProxy:
     """A tiny stand-in for Django's FieldFile so templates can keep using `.url` and `.name`."""
 
-    def __init__(self, path):
+    def __init__(self, path, url=None):
         self._path = path
+        self._url = url
 
     def __bool__(self):
         return bool(self._path)
 
     @property
     def url(self):
+        if self._url:
+            return self._url
         if not self._path:
             return ""
         return default_storage.url(self._path)
@@ -47,21 +51,52 @@ class StoredFileProxy:
 class FileFieldDescriptor:
     """Descriptor that persists UploadedFile via Django's storage and keeps the original path."""
 
-    def __init__(self, storage_field, upload_to):
+    def __init__(
+        self,
+        storage_field,
+        upload_to,
+        binary_field=None,
+        filename_field=None,
+        content_type_field=None,
+        database_url=None,
+    ):
         self.storage_field = storage_field
         self.upload_to = upload_to
+        self.binary_field = binary_field
+        self.filename_field = filename_field
+        self.content_type_field = content_type_field
+        self.database_url = database_url
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
+        if self.binary_field and getattr(instance, self.binary_field, None):
+            return StoredFileProxy(
+                getattr(instance, self.filename_field, "") or "profile-image",
+                self.database_url,
+            )
         return StoredFileProxy(getattr(instance, self.storage_field))
 
     def __set__(self, instance, value):
         if not value:
             setattr(instance, self.storage_field, None)
+            if self.binary_field:
+                setattr(instance, self.binary_field, None)
+                setattr(instance, self.filename_field, None)
+                setattr(instance, self.content_type_field, None)
             return
 
         if hasattr(value, "read") and hasattr(value, "name"):
+            if self.binary_field:
+                setattr(instance, self.binary_field, value.read())
+                setattr(instance, self.filename_field, value.name)
+                setattr(
+                    instance,
+                    self.content_type_field,
+                    getattr(value, "content_type", "application/octet-stream"),
+                )
+                setattr(instance, self.storage_field, None)
+                return
             destination = os.path.join(self.upload_to, value.name)
             saved_path = default_storage.save(destination, value)
             if os.sep != "/":
@@ -174,9 +209,19 @@ class Profile(TimestampedDocument):
     linkedin = StringField()
     twitter = StringField()
     image_path = StringField()
+    image_data = BinaryField()
+    image_filename = StringField()
+    image_content_type = StringField(default="image/jpeg")
     resume_path = StringField()
 
-    image = FileFieldDescriptor("image_path", "profiles")
+    image = FileFieldDescriptor(
+        "image_path",
+        "profiles",
+        binary_field="image_data",
+        filename_field="image_filename",
+        content_type_field="image_content_type",
+        database_url="/profile-image/",
+    )
     resume = FileFieldDescriptor("resume_path", "resumes")
 
     meta = {"collection": "profile"}
