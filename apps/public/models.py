@@ -294,12 +294,22 @@ class Project(TimestampedDocument):
     description = StringField()
     tech_stack = ListField(StringField(), default=list)
     image_path = StringField()
+    image_data = BinaryField()
+    image_filename = StringField()
+    image_content_type = StringField(default="image/jpeg")
     github_link = StringField()
     demo_link = StringField()
     is_featured = BooleanField(default=False)
     is_active = BooleanField(default=True)
 
-    image = FileFieldDescriptor("image_path", "projects")
+    image = FileFieldDescriptor(
+        "image_path",
+        "projects",
+        binary_field="image_data",
+        filename_field="image_filename",
+        content_type_field="image_content_type",
+        database_url=lambda project: f"/projects/{project.id}/image/" if project.id else "",
+    )
 
     meta = {"collection": "projects", "ordering": ["-created_at"]}
 

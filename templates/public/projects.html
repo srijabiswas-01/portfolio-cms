@@ -52,13 +52,13 @@
                     <div class="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                         <div class="flex gap-3">
                             {% if project.github_link %}
-                            <a href="{{ project.github_link }}" target="_blank" 
+                            <a href="{{ project.github_link }}" target="_blank" rel="noopener noreferrer"
                                class="w-10 h-10 bg-white text-card rounded-lg flex items-center justify-center hover:bg-accent-primary hover:text-white transition-all">
                                 <i class="bi bi-github"></i>
                             </a>
                             {% endif %}
                             {% if project.demo_link %}
-                            <a href="{{ project.demo_link }}" target="_blank" 
+                            <a href="{{ project.demo_link }}" target="_blank" rel="noopener noreferrer"
                                class="w-10 h-10 bg-white text-card rounded-lg flex items-center justify-center hover:bg-accent-primary hover:text-white transition-all">
                                 <i class="bi bi-box-arrow-up-right"></i>
                             </a>

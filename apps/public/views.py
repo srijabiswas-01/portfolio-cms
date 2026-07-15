@@ -314,6 +314,22 @@ def project_detail(request, id):
     return render(request, 'public/project_detail.html', context)
 
 
+def project_image(request, id):
+    """Serve a project image stored in MongoDB."""
+    project = get_document_or_404(Project, id=id)
+    if not project.image_data:
+        raise Http404("Project image not found")
+
+    response = HttpResponse(
+        bytes(project.image_data),
+        content_type=project.image_content_type or "image/jpeg",
+    )
+    response["Content-Disposition"] = "inline"
+    response["Cache-Control"] = "no-cache"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
 def blog_list(request):
     """Blog list page view"""
     active_categories = list(BlogCategory.objects.filter(is_active=True))

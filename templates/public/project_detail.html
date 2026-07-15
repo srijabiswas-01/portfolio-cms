@@ -34,13 +34,13 @@
             <!-- Action Buttons -->
             <div class="flex flex-wrap gap-4">
                 {% if project.github_link %}
-                <a href="{{ project.github_link }}" target="_blank" class="btn-primary">
+                <a href="{{ project.github_link }}" target="_blank" rel="noopener noreferrer" class="btn-primary">
                     <i class="bi bi-github mr-2"></i>
                     View on GitHub
                 </a>
                 {% endif %}
                 {% if project.demo_link %}
-                <a href="{{ project.demo_link }}" target="_blank" class="btn-secondary">
+                <a href="{{ project.demo_link }}" target="_blank" rel="noopener noreferrer" class="btn-secondary">
                     <i class="bi bi-box-arrow-up-right mr-2"></i>
                     Live Demo
                 </a>
@@ -120,14 +120,14 @@
                             <p class="text-sm text-muted mb-3">Links</p>
                             <div class="space-y-2">
                                 {% if project.github_link %}
-                                <a href="{{ project.github_link }}" target="_blank" 
+                                <a href="{{ project.github_link }}" target="_blank" rel="noopener noreferrer"
                                    class="flex items-center gap-2 text-accent-primary hover:text-accent-secondary transition-colors">
                                     <i class="bi bi-github"></i>
                                     <span>Source Code</span>
                                 </a>
                                 {% endif %}
                                 {% if project.demo_link %}
-                                <a href="{{ project.demo_link }}" target="_blank" 
+                                <a href="{{ project.demo_link }}" target="_blank" rel="noopener noreferrer"
                                    class="flex items-center gap-2 text-accent-primary hover:text-accent-secondary transition-colors">
                                     <i class="bi bi-box-arrow-up-right"></i>
                                     <span>Live Demo</span>

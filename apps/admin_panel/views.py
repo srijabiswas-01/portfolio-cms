@@ -341,6 +341,13 @@ def project_form(request):
         tech_stack = [tech.strip() for tech in tech_stack_input.split(',') if tech.strip()]
         
         image = request.FILES.get('image')
+        if image:
+            if not (image.content_type or '').startswith('image/'):
+                messages.error(request, 'Project image must be a valid image file.')
+                return render(request, 'admin/project_form.html')
+            if image.size > 5 * 1024 * 1024:
+                messages.error(request, 'Project image must be 5MB or smaller.')
+                return render(request, 'admin/project_form.html')
         github_link = request.POST.get('github_link', '')
         demo_link = request.POST.get('demo_link', '')
         is_featured = request.POST.get('is_featured') == 'on'
@@ -377,8 +384,17 @@ def project_edit(request, id):
         tech_stack_input = request.POST.get('tech_stack', '')
         project.tech_stack = [tech.strip() for tech in tech_stack_input.split(',') if tech.strip()]
         
-        if request.FILES.get('image'):
-            project.image = request.FILES.get('image')
+        image = request.FILES.get('image')
+        if image:
+            if not (image.content_type or '').startswith('image/'):
+                messages.error(request, 'Project image must be a valid image file.')
+                return render(request, 'admin/project_form.html', {'project': project})
+            if image.size > 5 * 1024 * 1024:
+                messages.error(request, 'Project image must be 5MB or smaller.')
+                return render(request, 'admin/project_form.html', {'project': project})
+            if project.image_path:
+                default_storage.delete(project.image_path)
+            project.image = image
         
         project.github_link = request.POST.get('github_link', '')
         project.demo_link = request.POST.get('demo_link', '')
