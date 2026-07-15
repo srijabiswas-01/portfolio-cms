@@ -100,6 +100,17 @@
                             <option value="published" {% if blog.status == 'published' %}selected{% endif %}>Published</option>
                         </select>
                     </div>
+
+                    <div class="admin-form-group">
+                        <label class="admin-form-label" for="category_id">Category</label>
+                        <select id="category_id" name="category_id" class="admin-form-select">
+                            <option value="">Uncategorized</option>
+                            {% for category in blog_categories %}
+                            <option value="{{ category.id_str }}" {% if blog.category and blog.category.id == category.id %}selected{% endif %}>{{ category.name }}{% if not category.is_active %} (Inactive){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                        <p style="margin-top:.4rem; color:var(--admin-text-muted); font-size:.72rem;">Categories can be managed from the Blogs list.</p>
+                    </div>
                     
                     <div style="display: flex; align-items: center; margin-bottom: 1rem; gap: 0.5rem;">
                         <input type="checkbox"

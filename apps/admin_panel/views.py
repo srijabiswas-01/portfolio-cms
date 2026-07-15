@@ -19,7 +19,7 @@ from apps.public.models import (
     HomePage, AboutPage, ContactPage,
     Education, Experience, Interest, Achievement, CoreValue,
     ResearchCategory, ResearchEntry,
-    ContactSubmission, SkillCategory, ResumeFile,
+    ContactSubmission, SkillCategory, ResumeFile, ExternalBlog, BlogCategory,
 )
 # ============================================
 # DASHBOARD
@@ -109,6 +109,8 @@ def blogs_list(request):
         'blogs_count': blogs_count,
         'published_blogs': published_blogs,
         'draft_blogs': draft_blogs,
+        'external_blogs': ExternalBlog.objects.all(),
+        'blog_categories': BlogCategory.objects.all(),
     }
     return render(request, 'admin/blog_list.html', context)
 
@@ -126,6 +128,16 @@ def blog_editor(request):
         read_time = request.POST.get('read_time', 5)
         cover_image = request.FILES.get('cover_image')
         is_active = request.POST.get('is_active') == 'on'
+        category_id = request.POST.get('category_id')
+        category = BlogCategory.objects.filter(id=category_id).first() if category_id else None
+
+        if cover_image:
+            if not (cover_image.content_type or '').startswith('image/'):
+                messages.error(request, 'Blog cover must be a valid image file.')
+                return render(request, 'admin/blog_editor.html')
+            if cover_image.size > 5 * 1024 * 1024:
+                messages.error(request, 'Blog cover image must be 5 MB or smaller.')
+                return render(request, 'admin/blog_editor.html')
         
         # Determine status based on action button
         action = request.POST.get('action', 'draft')
@@ -140,6 +152,7 @@ def blog_editor(request):
             status=status,
             read_time=read_time,
             is_active=is_active,
+            category=category,
             published_date=timezone.now() if status == 'published' else None
         )
         if cover_image:
@@ -150,7 +163,7 @@ def blog_editor(request):
         messages.success(request, f'Blog "{title}" created successfully!')
         return redirect('admin_blogs_list')
     
-    return render(request, 'admin/blog_editor.html')
+    return render(request, 'admin/blog_editor.html', {'blog_categories': BlogCategory.objects.filter(is_active=True)})
 
 
 @login_required
@@ -177,9 +190,20 @@ def blog_edit(request, id):
         
         blog.read_time = request.POST.get('read_time', 5)
         blog.is_active = request.POST.get('is_active') == 'on'
+        category_id = request.POST.get('category_id')
+        blog.category = BlogCategory.objects.filter(id=category_id).first() if category_id else None
         
-        if request.FILES.get('cover_image'):
-            blog.cover_image = request.FILES.get('cover_image')
+        cover_image = request.FILES.get('cover_image')
+        if cover_image:
+            if not (cover_image.content_type or '').startswith('image/'):
+                messages.error(request, 'Blog cover must be a valid image file.')
+                return render(request, 'admin/blog_editor.html', {'blog': blog})
+            if cover_image.size > 5 * 1024 * 1024:
+                messages.error(request, 'Blog cover image must be 5 MB or smaller.')
+                return render(request, 'admin/blog_editor.html', {'blog': blog})
+            if blog.cover_image_path:
+                default_storage.delete(blog.cover_image_path)
+            blog.cover_image = cover_image
         
         blog.save()
         
@@ -188,6 +212,7 @@ def blog_edit(request, id):
     
     context = {
         'blog': blog,
+        'blog_categories': BlogCategory.objects.all(),
     }
     return render(request, 'admin/blog_editor.html', context)
 
@@ -205,6 +230,88 @@ def blog_delete(request, id):
         messages.success(request, f'Blog "{title}" deleted successfully!')
         return redirect('admin_blogs_list')
     
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def blog_toggle_active(request, id):
+    if request.method == 'POST':
+        blog = get_document_or_404(Blog, id=id)
+        blog.is_active = not blog.is_active
+        blog.save()
+        state = 'visible' if blog.is_active else 'hidden'
+        messages.success(request, f'"{blog.title}" is now {state} on the public site.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def external_blog_create(request):
+    if request.method == 'POST':
+        ExternalBlog(
+            title=request.POST.get('title', '').strip(),
+            platform=request.POST.get('platform', 'medium'),
+            url=request.POST.get('url', '').strip(),
+            preview=request.POST.get('preview', '').strip()[:300],
+            image_url=request.POST.get('image_url', '').strip(),
+            published_date=request.POST.get('published_date', ''),
+            is_active=request.POST.get('is_active') == 'on',
+        ).save()
+        messages.success(request, 'External blog link added successfully.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def external_blog_toggle_active(request, id):
+    if request.method == 'POST':
+        blog = get_document_or_404(ExternalBlog, id=id)
+        blog.is_active = not blog.is_active
+        blog.save()
+        state = 'active' if blog.is_active else 'inactive'
+        messages.success(request, f'External blog "{blog.title}" is now {state}.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def external_blog_delete(request, id):
+    if request.method == 'POST':
+        blog = get_document_or_404(ExternalBlog, id=id)
+        title = blog.title
+        blog.delete()
+        messages.success(request, f'External blog "{title}" deleted.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def blog_category_create(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        if name and not BlogCategory.objects(name__iexact=name).first():
+            BlogCategory(name=name, slug='', is_active=request.POST.get('is_active') == 'on').save()
+            messages.success(request, f'Blog category "{name}" created.')
+        else:
+            messages.warning(request, 'Enter a unique category name.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def blog_category_toggle_active(request, id):
+    if request.method == 'POST':
+        category = get_document_or_404(BlogCategory, id=id)
+        category.is_active = not category.is_active
+        category.save()
+        state = 'active' if category.is_active else 'inactive'
+        messages.success(request, f'Category "{category.name}" is now {state}.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def blog_category_delete(request, id):
+    if request.method == 'POST':
+        category = get_document_or_404(BlogCategory, id=id)
+        name = category.name
+        Blog.objects(category=category).update(unset__category=1)
+        category.delete()
+        messages.success(request, f'Category "{name}" deleted; its posts are now uncategorized.')
     return redirect('admin_blogs_list')
 
 

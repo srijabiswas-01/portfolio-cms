@@ -17,6 +17,7 @@ from apps.common_utils import (
 from .models import (
     AboutPage,
     Blog,
+    BlogCategory,
     ContactPage,
     ContactSubmission,
     CoreValue,
@@ -30,6 +31,7 @@ from .models import (
     ResearchCategory,
     ResearchEntry,
     ResumeFile,
+    ExternalBlog,
     Skill,
 )
 
@@ -314,7 +316,14 @@ def project_detail(request, id):
 
 def blog_list(request):
     """Blog list page view"""
-    all_blogs = Blog.objects.filter(status='published', is_active=True).order_by('-published_date')
+    active_categories = list(BlogCategory.objects.filter(is_active=True))
+    category_visibility = (
+        Q(category__in=active_categories) |
+        Q(category=None) |
+        Q(category__exists=False)
+    )
+    all_blogs = Blog.objects.filter(status='published', is_active=True).filter(category_visibility).order_by('-published_date')
+    external_blogs = ExternalBlog.objects.filter(is_active=True).order_by('-published_date')
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -324,7 +333,16 @@ def blog_list(request):
             Q(preview__icontains=search_query) |
             Q(content__icontains=search_query)
         )
+        external_blogs = external_blogs.filter(
+            Q(title__icontains=search_query) |
+            Q(preview__icontains=search_query)
+        )
     
+    category_filter = request.GET.get('category', '')
+    if category_filter:
+        category = BlogCategory.objects.filter(slug=category_filter, is_active=True).first()
+        all_blogs = all_blogs.filter(category=category) if category else []
+
     # Filter by tag
     tag_filter = request.GET.get('tag', '')
     if tag_filter:
@@ -345,7 +363,10 @@ def blog_list(request):
         'blogs': blogs_page,
         'search_query': search_query,
         'tag_filter': tag_filter,
+        'category_filter': category_filter,
+        'blog_categories': active_categories,
         'all_tags': sorted(all_tags),
+        'external_blogs': external_blogs,
     }
     return render(request, 'public/blog_list.html', context)
 
@@ -353,6 +374,8 @@ def blog_list(request):
 def blog_detail(request, id):
     """Single blog detail page view"""
     blog = get_document_or_404(Blog, id=id, status='published', is_active=True)
+    if blog.category and not blog.category.is_active:
+        raise Http404("Blog category is inactive")
     
     # Get related blogs (same tags or recent)
     related_blogs = Blog.objects.filter(
@@ -365,6 +388,22 @@ def blog_detail(request, id):
         'related_blogs': related_blogs,
     }
     return render(request, 'public/blog_detail.html', context)
+
+
+def blog_cover(request, id):
+    """Serve a blog cover image stored in MongoDB."""
+    blog = get_document_or_404(Blog, id=id)
+    if not blog.cover_image_data:
+        raise Http404("Blog cover image not found")
+
+    response = HttpResponse(
+        bytes(blog.cover_image_data),
+        content_type=blog.cover_image_content_type or "image/jpeg",
+    )
+    response["Content-Disposition"] = "inline"
+    response["Cache-Control"] = "no-cache"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
 
 
 # def contact(request):

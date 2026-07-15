@@ -14,6 +14,7 @@ urlpatterns = [
     path('projects/', views.projects, name='projects'),
     path('projects/<str:id>/', views.project_detail, name='project_detail'),
     path('blog/', views.blog_list, name='blogs'),
+    path('blog/<str:id>/cover/', views.blog_cover, name='blog_cover'),
     path('blog/<str:id>/', views.blog_detail, name='blog_detail'),
     path('contact/', views.contact, name='contact'),
 ]

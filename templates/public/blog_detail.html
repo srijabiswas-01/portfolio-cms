@@ -34,18 +34,10 @@
 
             <!-- Title -->
             <span class="eyebrow">Article</span>
+            {% if blog.category %}<a href="{% url 'blogs' %}?category={{ blog.category.slug }}" class="tag-badge mb-4">{{ blog.category.name }}</a>{% endif %}
             <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-6 leading-tight">
                 {{ blog.title }}
             </h1>
-
-            <!-- Tags -->
-            <div class="flex flex-wrap gap-2 mb-8">
-                {% for tag in blog.tags %}
-                <a href="{% url 'blogs' %}?tag={{ tag }}" class="tag-badge hover:bg-accent-secondary/20 transition-colors">
-                    {{ tag }}
-                </a>
-                {% endfor %}
-            </div>
 
             <!-- Cover Image -->
             {% if blog.cover_image %}
@@ -64,6 +56,20 @@
                     {{ blog.content|safe }}
                 </div>
             </div>
+
+            <!-- Tags -->
+            {% if blog.tags %}
+            <div class="border-t border-color pt-6 mb-8">
+                <h3 class="text-sm font-semibold text-muted uppercase tracking-wider mb-3">Article tags</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in blog.tags %}
+                    <a href="{% url 'blogs' %}?tag={{ tag }}" class="tag-badge hover:bg-accent-secondary/20 transition-colors">
+                        {{ tag }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Share Section -->
             <div class="border-t border-color pt-8 mb-12">

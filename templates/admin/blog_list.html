@@ -45,6 +45,7 @@
             <tr>
                 <th style="width: 50%;">Title</th>
                 <th>Status</th>
+                <th>Category</th>
                 <th>Visibility</th>
                 <th>Published Date</th>
                 <th>Read Time</th>
@@ -58,7 +59,8 @@
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div style="width: 60px; height: 60px; flex-shrink: 0; background: var(--admin-bg-primary); border-radius: 0.5rem; overflow: hidden;">
                             {% if blog.cover_image %}
-                            <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="{{ blog.cover_image.url }}" alt="{{ blog.title }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; color:var(--admin-text-muted);"><i class="bi bi-file-text"></i></div>
                             {% else %}
                             <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--admin-text-muted);">
                                 <i class="bi bi-file-text text-xl"></i>
@@ -82,6 +84,7 @@
                     <span class="admin-badge admin-badge-warning">Draft</span>
                     {% endif %}
                 </td>
+                <td><span class="admin-badge admin-badge-info">{{ blog.category_name }}</span></td>
                 <td>
                     {% if blog.is_active %}
                     <span class="admin-badge admin-badge-success">Active</span>
@@ -101,7 +104,7 @@
                 </td>
                 <td>
                     <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                        {% if blog.status == 'published' %}
+                        {% if blog.status == 'published' and blog.is_active %}
                         <a href="{% url 'blog_detail' blog.id_str %}" target="_blank" 
                            class="admin-btn-secondary" 
                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
@@ -109,6 +112,12 @@
                             <i class="bi bi-eye"></i>
                         </a>
                         {% endif %}
+                        <form method="POST" action="{% url 'admin_blog_toggle_active' blog.id_str %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="{% if blog.is_active %}admin-btn-success{% else %}admin-btn-secondary{% endif %}" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;" title="{% if blog.is_active %}Hide from public site{% else %}Show on public site{% endif %}">
+                                <i class="bi bi-{% if blog.is_active %}toggle-on{% else %}toggle-off{% endif %}"></i>
+                            </button>
+                        </form>
                         <a href="{% url 'admin_blog_edit' blog.id_str %}" 
                            class="admin-btn-secondary" 
                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;"
@@ -144,6 +153,103 @@
     </a>
 </div>
 {% endif %}
+
+<!-- Blog Categories -->
+<section class="admin-card blog-category-manager" style="margin-top: 2rem;">
+    <div class="external-blog-heading">
+        <div>
+            <h2>Blog Categories</h2>
+            <p>Create categories used by the public Topics filter.</p>
+        </div>
+        <span class="admin-badge admin-badge-info">{{ blog_categories|length }} categories</span>
+    </div>
+    <form method="POST" action="{% url 'admin_blog_category_create' %}" class="blog-category-create-form">
+        {% csrf_token %}
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="blog_category_name">Category name</label>
+            <input id="blog_category_name" name="name" class="admin-form-input" placeholder="e.g. Artificial Intelligence" required>
+        </div>
+        <label class="external-active-check"><input type="checkbox" name="is_active" checked> Active</label>
+        <button class="admin-btn-primary"><i class="bi bi-plus-lg"></i> Add Category</button>
+    </form>
+    <div class="blog-category-list">
+        {% for category in blog_categories %}
+        <div class="blog-category-item">
+            <div><strong>{{ category.name }}</strong><span>/{{ category.slug }}</span></div>
+            {% if category.is_active %}<span class="admin-badge admin-badge-success">Active</span>{% else %}<span class="admin-badge admin-badge-warning">Inactive</span>{% endif %}
+            <div class="external-blog-admin-actions">
+                <form method="POST" action="{% url 'admin_blog_category_toggle_active' category.id_str %}">{% csrf_token %}<button class="admin-btn-secondary" title="Toggle category"><i class="bi bi-{% if category.is_active %}toggle-on{% else %}toggle-off{% endif %}"></i></button></form>
+                <form method="POST" action="{% url 'admin_blog_category_delete' category.id_str %}" onsubmit="return confirm('Delete this category? Assigned posts will become uncategorized.');">{% csrf_token %}<button class="admin-btn-danger" title="Delete category"><i class="bi bi-trash"></i></button></form>
+            </div>
+        </div>
+        {% empty %}<p class="external-blog-empty">No blog categories created yet.</p>{% endfor %}
+    </div>
+</section>
+
+<!-- External Blog Platforms -->
+<section class="admin-card external-blog-manager" style="margin-top: 2rem;">
+    <div class="external-blog-heading">
+        <div>
+            <h2>Medium, Blogger &amp; External Articles</h2>
+            <p>Add links to articles published on your other platforms.</p>
+        </div>
+        <span class="admin-badge admin-badge-info">{{ external_blogs|length }} links</span>
+    </div>
+
+    <form method="POST" action="{% url 'admin_external_blog_create' %}" class="external-blog-form">
+        {% csrf_token %}
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="external_title">Article title *</label>
+            <input id="external_title" name="title" class="admin-form-input" required>
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="external_platform">Platform *</label>
+            <select id="external_platform" name="platform" class="admin-form-select" required>
+                <option value="medium">Medium</option>
+                <option value="blogger">Blogger</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="admin-form-group external-url-field">
+            <label class="admin-form-label" for="external_url">Article URL *</label>
+            <input id="external_url" name="url" type="url" class="admin-form-input" placeholder="https://medium.com/@username/article" required>
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="external_date">Published date</label>
+            <input id="external_date" name="published_date" type="date" class="admin-form-input">
+        </div>
+        <div class="admin-form-group external-image-field">
+            <label class="admin-form-label" for="external_image">Cover image URL</label>
+            <input id="external_image" name="image_url" type="url" class="admin-form-input" placeholder="https://example.com/image.jpg">
+        </div>
+        <div class="admin-form-group external-preview-field">
+            <label class="admin-form-label" for="external_preview">Short summary</label>
+            <textarea id="external_preview" name="preview" class="admin-form-textarea" maxlength="300" rows="3" placeholder="What is this article about?"></textarea>
+        </div>
+        <label class="external-active-check"><input type="checkbox" name="is_active" checked> Show on public Blog page</label>
+        <button type="submit" class="admin-btn-primary"><i class="bi bi-plus-lg"></i> Add External Article</button>
+    </form>
+
+    <div class="external-blog-list">
+        {% for external in external_blogs %}
+        <article class="external-blog-admin-item">
+            <span class="external-platform-badge platform-{{ external.platform }}">{{ external.platform|title }}</span>
+            <div class="external-blog-admin-copy">
+                <strong>{{ external.title }}</strong>
+                <a href="{{ external.url }}" target="_blank" rel="noopener noreferrer">{{ external.url|truncatechars:65 }}</a>
+            </div>
+            {% if external.is_active %}<span class="admin-badge admin-badge-success">Active</span>{% else %}<span class="admin-badge admin-badge-warning">Inactive</span>{% endif %}
+            <div class="external-blog-admin-actions">
+                <a href="{{ external.url }}" target="_blank" rel="noopener noreferrer" class="admin-btn-secondary" title="Open article"><i class="bi bi-box-arrow-up-right"></i></a>
+                <form method="POST" action="{% url 'admin_external_blog_toggle_active' external.id_str %}">{% csrf_token %}<button class="admin-btn-secondary" title="Toggle visibility"><i class="bi bi-{% if external.is_active %}toggle-on{% else %}toggle-off{% endif %}"></i></button></form>
+                <form method="POST" action="{% url 'admin_external_blog_delete' external.id_str %}" onsubmit="return confirm('Delete this external blog link?');">{% csrf_token %}<button class="admin-btn-danger" title="Delete"><i class="bi bi-trash"></i></button></form>
+            </div>
+        </article>
+        {% empty %}
+        <p class="external-blog-empty">No external articles added yet.</p>
+        {% endfor %}
+    </div>
+</section>
 
 <!-- Delete Confirmation Modal -->
 <div id="deleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">

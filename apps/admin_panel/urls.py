@@ -84,8 +84,15 @@ urlpatterns = [
     # Blog Management
     path('blogs/', views.blogs_list, name='admin_blogs_list'),
     path('blogs/new/', views.blog_editor, name='admin_blog_editor'),
+    path('blogs/<str:id>/toggle-active/', views.blog_toggle_active, name='admin_blog_toggle_active'),
     path('blogs/<str:id>/edit/', views.blog_edit, name='admin_blog_edit'),
     path('blogs/<str:id>/delete/', views.blog_delete, name='admin_blog_delete'),
+    path('external-blogs/add/', views.external_blog_create, name='admin_external_blog_create'),
+    path('external-blogs/<str:id>/toggle-active/', views.external_blog_toggle_active, name='admin_external_blog_toggle_active'),
+    path('external-blogs/<str:id>/delete/', views.external_blog_delete, name='admin_external_blog_delete'),
+    path('blog-categories/add/', views.blog_category_create, name='admin_blog_category_create'),
+    path('blog-categories/<str:id>/toggle-active/', views.blog_category_toggle_active, name='admin_blog_category_toggle_active'),
+    path('blog-categories/<str:id>/delete/', views.blog_category_delete, name='admin_blog_category_delete'),
     
     # Project Management
     path('projects/', views.project_manager, name='admin_project_manager'),

@@ -71,9 +71,10 @@ class FileFieldDescriptor:
         if instance is None:
             return self
         if self.binary_field and getattr(instance, self.binary_field, None):
+            database_url = self.database_url(instance) if callable(self.database_url) else self.database_url
             return StoredFileProxy(
                 getattr(instance, self.filename_field, "") or "profile-image",
-                self.database_url,
+                database_url,
             )
         return StoredFileProxy(getattr(instance, self.storage_field))
 
@@ -306,6 +307,32 @@ class Project(TimestampedDocument):
         return self.title
 
 
+class BlogCategory(Document):
+    name = StringField(max_length=100, required=True, unique=True)
+    slug = StringField(max_length=120, required=True, unique=True)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "blog_categories", "ordering": ["name"]}
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def id_str(self):
+        return str(self.id)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.name) or "category"
+            candidate = base
+            counter = 1
+            while BlogCategory.objects(slug=candidate, id__ne=self.id).first():
+                candidate = f"{base}-{counter}"
+                counter += 1
+            self.slug = candidate
+        return super().save(*args, **kwargs)
+
+
 class Blog(TimestampedDocument):
     STATUS_CHOICES = ("draft", "published")
 
@@ -313,7 +340,11 @@ class Blog(TimestampedDocument):
     content = StringField()
     preview = StringField(max_length=300)
     cover_image_path = StringField()
+    cover_image_data = BinaryField()
+    cover_image_filename = StringField()
+    cover_image_content_type = StringField(default="image/jpeg")
     tags = ListField(StringField(), default=list)
+    category = ReferenceField(BlogCategory, reverse_delete_rule=NULLIFY)
     status = StringField(choices=STATUS_CHOICES, default="draft")
     is_active = BooleanField(default=True)
     read_time = IntField(default=5)
@@ -322,12 +353,23 @@ class Blog(TimestampedDocument):
     author_id = StringField()
     published_date = DateTimeField()
 
-    cover_image = FileFieldDescriptor("cover_image_path", "blogs")
+    cover_image = FileFieldDescriptor(
+        "cover_image_path",
+        "blogs",
+        binary_field="cover_image_data",
+        filename_field="cover_image_filename",
+        content_type_field="cover_image_content_type",
+        database_url=lambda blog: f"/blog/{blog.id}/cover/" if blog.id else "",
+    )
 
     meta = {"collection": "blogs", "ordering": ["-created_at"]}
 
     def __str__(self):
         return self.title
+
+    @property
+    def category_name(self):
+        return self.category.name if self.category else "Uncategorized"
 
     @property
     def author(self):
@@ -352,6 +394,22 @@ class Blog(TimestampedDocument):
         )
         self.author_id = str(getattr(user, "pk", getattr(user, "id", "")))
 
+
+class ExternalBlog(TimestampedDocument):
+    PLATFORM_CHOICES = ("medium", "blogger", "other")
+
+    title = StringField(max_length=200, required=True)
+    platform = StringField(choices=PLATFORM_CHOICES, default="medium")
+    url = StringField(required=True)
+    preview = StringField(max_length=300, default="")
+    image_url = StringField(default="")
+    published_date = StringField(max_length=10, default="")
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "external_blogs", "ordering": ["-published_date", "-created_at"]}
+
+    def __str__(self):
+        return self.title
 
 class HomePage(SingletonDocument):
     hero_title = StringField(max_length=200, default="Your Name")
