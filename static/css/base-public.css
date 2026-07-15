@@ -721,6 +721,18 @@ input:focus, textarea:focus, select:focus {
 .footer-column .social-icon[aria-label="LinkedIn"]:hover { background: #0a66c2; border-color: #0a66c2; }
 .footer-column .social-icon[aria-label="Email"]:hover { background: #db2777; border-color: #db2777; }
 .footer-column .social-icon[aria-label="Twitter"]:hover { background: #1d9bf0; border-color: #1d9bf0; }
+.footer-admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    margin-top: .65rem;
+    color: var(--text-muted);
+    font-size: .72rem;
+    opacity: .65;
+    text-decoration: none;
+    transition: color .2s ease, opacity .2s ease;
+}
+.footer-admin-link:hover { color: var(--accent-primary); opacity: 1; }
 
 @keyframes ambient-drift {
   0% { transform: translate3d(0, -2rem, 0) rotate(0deg) scale(.92); }
