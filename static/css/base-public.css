@@ -345,6 +345,56 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   box-shadow: var(--shadow-lg);
 }
 
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 20rem));
+  justify-content: center;
+  gap: 2rem;
+}
+
+.project-media-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  padding: 1.25rem;
+  opacity: 0;
+  background: linear-gradient(to top, rgba(2, 6, 23, .9), rgba(2, 6, 23, .18) 65%, transparent);
+  transition: opacity .25s ease;
+}
+.project-card:hover .project-media-overlay,
+.project-card:focus-within .project-media-overlay { opacity: 1; }
+.project-hover-actions { display: flex; gap: .65rem; }
+.project-hover-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: .75rem;
+  color: #06111f;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .32);
+  font-size: 1.2rem;
+  text-decoration: none;
+  transform: translateY(.4rem);
+  transition: color .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+}
+.project-card:hover .project-hover-action,
+.project-card:focus-within .project-hover-action { transform: translateY(0); }
+.project-hover-action:hover {
+  color: #fff;
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+}
+
+@media (hover: none) {
+  .project-media-overlay { opacity: 1; background: linear-gradient(to top, rgba(2, 6, 23, .72), transparent 55%); }
+  .project-hover-action { transform: none; }
+}
+
 .blog-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);

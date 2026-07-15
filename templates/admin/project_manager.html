@@ -63,7 +63,7 @@
             </div>
             
             <p style="color: var(--admin-text-secondary); font-size: 0.875rem; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                {{ project.description }}
+                {{ project.description|striptags|truncatewords:24 }}
             </p>
             
             <!-- Tech Stack -->
