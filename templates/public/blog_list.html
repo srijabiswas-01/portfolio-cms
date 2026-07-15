@@ -4,9 +4,10 @@
 
 {% block content %}
 <!-- Blog Header -->
-<section class="py-20">
+<section class="page-hero section-shell py-20">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
+            <span class="eyebrow">Notes &amp; ideas</span>
             <h1 class="text-5xl font-bold font-poppins mb-4">
                 My <span class="text-accent-primary">Blog</span>
             </h1>
@@ -71,7 +72,7 @@
 
         <!-- Blog Grid -->
         {% if blogs %}
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div class="reveal-on-scroll grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {% for blog in blogs %}
             <article class="blog-card group">
                 <!-- Blog Cover -->

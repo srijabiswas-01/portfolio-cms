@@ -4,7 +4,7 @@
 
 {% block content %}
 <!-- Project Hero -->
-<section class="py-20">
+<section class="page-hero section-shell py-20">
     <div class="container mx-auto px-4">
         <!-- Back Button -->
         <div class="mb-8">
@@ -18,6 +18,7 @@
         <div class="mb-12">
             <div class="flex items-start justify-between mb-6">
                 <div class="flex-1">
+                    <span class="eyebrow">Project case study</span>
                     <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-4">
                         {{ project.title }}
                     </h1>
@@ -48,7 +49,7 @@
         </div>
 
         <!-- Project Image -->
-        <div class="mb-12">
+        <div class="reveal-on-scroll mb-12">
             <div class="relative overflow-hidden rounded-2xl border border-color bg-card" style="height: 500px;">
                 {% if project.image %}
                 <img src="{{ project.image.url }}" 

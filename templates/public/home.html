@@ -5,7 +5,7 @@
 
 {% block content %}
 <!-- Hero Section -->
-<section class="min-h-screen flex items-center relative overflow-hidden">
+<section class="hero-section section-shell min-h-screen flex items-center relative overflow-hidden">
     <!-- Animated Background -->
     <div class="absolute inset-0 opacity-10">
         <div class="absolute top-20 left-10 w-72 h-72 bg-accent-primary rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
@@ -18,7 +18,7 @@
             <!-- Text Content -->
             <div class="space-y-6">
                 <div class="space-y-2">
-                    <p class="text-accent-primary font-medium">👋 Hello, I'm</p>
+                    <p class="eyebrow">Available for opportunities</p>
                     {% if home_page_visibility.hero_title %}
                     <p class="text-2xl md:text-7xl font-bold font-poppins">
                         <span class="hero-name">{{ home_page.hero_title|default:"Data Scientist" }}</span>
@@ -68,7 +68,7 @@
             </div>
             
             <!-- Hero Image/Illustration -->
-            <div class="relative">
+            <div class="hero-visual relative">
                 <div class="relative w-full aspect-square">
                     <!-- Decorative Elements -->
                     <div class="absolute inset-0 bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 rounded-full blur-3xl"></div>
@@ -103,7 +103,7 @@
 </section>
 
 <!-- Skills Highlight Section -->
-<section class="py-20 bg-secondary">
+<section class="section-shell reveal-on-scroll py-20 bg-secondary">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="section-title">Core Expertise</h2>
@@ -132,7 +132,7 @@
 </section>
 
 <!-- Featured Projects Section -->
-<section class="py-20">
+<section class="section-shell reveal-on-scroll py-20">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="section-title">Featured Projects</h2>
@@ -195,7 +195,7 @@
     </div>
 </section>
 <!-- Latest Blogs Section -->
-<section class="py-20 bg-secondary">
+<section class="section-shell reveal-on-scroll py-20 bg-secondary">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="section-title">Latest Blog Posts</h2>
@@ -257,9 +257,9 @@
 
 <!-- CTA Section -->
 {% if home_page_visibility.cta_section %}
-<section class="py-20">
+<section class="section-shell reveal-on-scroll py-20">
     <div class="container mx-auto px-4">
-        <div class="bg-gradient-to-r from-accent-primary to-accent-secondary rounded-2xl p-12 text-center">
+        <div class="cta-panel bg-gradient-to-r from-accent-primary to-accent-secondary rounded-2xl p-8 md:p-12 text-center">
             <h2 class="text-4xl font-bold font-poppins mb-4">Let's Work Together</h2>
             <p class="text-lg mb-8 opacity-90">
                 Have a project in mind? Let's create something amazing together.
@@ -269,7 +269,6 @@
                 <i class="bi bi-send ml-2"></i>
             </a>
         </div>
-    </div>
     </div>
 </section>
 {% endif %}

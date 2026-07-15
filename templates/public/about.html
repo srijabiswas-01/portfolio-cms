@@ -5,7 +5,7 @@
 
 {% block content %}
 <!-- About Hero Section -->
-<section class="py-20">
+<section class="about-hero section-shell page-hero py-20">
     <div class="container mx-auto px-4">
         <div class="grid md:grid-cols-2 gap-12 items-center">
             <!-- Profile Image Section -->
@@ -16,7 +16,7 @@
                     
                     <!-- Profile Card -->
                     <div class="relative bg-card border border-color rounded-2xl p-8 shadow-lg">
-                        <div class="aspect-square rounded-xl overflow-hidden mb-6 bg-secondary">
+                        <div class="profile-image-frame aspect-square rounded-xl overflow-hidden mb-6 bg-secondary">
                             {% if profile.image %}
                             <img src="{{ profile.image.url }}" alt="Profile" class="w-full h-full object-cover">
                             {% else %}
@@ -51,6 +51,7 @@
             <div class="space-y-6">
                 {% if about_page_visibility.page_title %}
                 <div>
+                    <span class="eyebrow">Profile &amp; journey</span>
                     <h1 class="text-4xl md:text-5xl font-bold font-poppins mb-4">
                         {{ about_page.page_title|default:"About Me" }}
                     </h1>
@@ -102,7 +103,7 @@
             </div>
         </div>
         {% if research_data %}
-        <section class="py-16">
+        <section class="reveal-on-scroll py-16">
             <div class="text-center mb-10">
                 <h2 class="section-title">Research &amp; Articles</h2>
                 <p class="section-subtitle">Documented findings, publications, and journal work.</p>
@@ -149,7 +150,7 @@
 
 {% if about_page.show_education %}
 <!-- Education Section -->
-<section class="py-20 bg-secondary">
+<section class="section-shell reveal-on-scroll py-20 bg-secondary">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
             <h2 class="section-title">Education</h2>
@@ -184,7 +185,7 @@
 {% endif %}
 
         {% if about_page_visibility.experiences %}
-        <section class="py-20 bg-secondary">
+        <section class="section-shell reveal-on-scroll py-20 bg-secondary">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-10">
                     <h2 class="section-title">{{ about_page.experiences_title|default:"Experiences" }}</h2>
@@ -222,7 +223,7 @@
         {% endif %}
 
         {% if about_page_visibility.achievements %}
-        <section class="py-20">
+        <section class="section-shell reveal-on-scroll py-20">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-10">
                     <h2 class="section-title">{{ about_page.achievements_title|default:"Achievements" }}</h2>
@@ -262,7 +263,7 @@
 
         {% if about_page_visibility.interests %}
         <!-- Interests Section -->
-        <section class="py-20">
+        <section class="section-shell reveal-on-scroll py-20">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-12">
                     <h2 class="section-title">{{ about_page.interests_title }}</h2>
@@ -289,7 +290,7 @@
 
         {% if about_page_visibility.values %}
         <!-- Values Section -->
-        <section class="py-20 bg-secondary">
+        <section class="section-shell reveal-on-scroll py-20 bg-secondary">
             <div class="container mx-auto px-4">
                 <div class="text-center mb-12">
                     <h2 class="section-title">{{ about_page.values_title }}</h2>

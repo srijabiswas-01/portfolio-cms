@@ -4,9 +4,10 @@
 
 {% block content %}
 <!-- Projects Header -->
-<section class="py-20">
+<section class="page-hero section-shell py-20">
     <div class="container mx-auto px-4">
         <div class="text-center mb-12">
+            <span class="eyebrow">Selected work</span>
             <h1 class="text-5xl font-bold font-poppins mb-4">
                 My <span class="text-accent-primary">Projects</span>
             </h1>
@@ -32,7 +33,7 @@
 
         <!-- Projects Grid -->
         {% if projects %}
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div class="reveal-on-scroll grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {% for project in projects %}
             <div class="project-card group">
                 <!-- Project Image -->

@@ -106,8 +106,8 @@ urlpatterns = [
     # Profile Management
     path('profile/', views.profile_manager, name='admin_profile_manager'),
     path('contact-submissions/', views.contact_submissions, name='admin_contact_submissions'),
+    path('contact-submissions/bulk-action/', views.contact_submissions_bulk_action, name='admin_contact_submissions_bulk_action'),
     path('contact-submissions/<str:id>/', views.contact_submission_detail, name='admin_contact_submission_detail'),
     path('contact-submissions/<str:id>/delete/', views.contact_submission_delete, name='admin_contact_submission_delete'),
     path('contact-submissions/<str:id>/mark-read/', views.contact_submission_mark_read, name='admin_contact_submission_mark_read'),
-    path('contact-submissions/bulk-action/', views.contact_submissions_bulk_action, name='admin_contact_submissions_bulk_action'),
 ]

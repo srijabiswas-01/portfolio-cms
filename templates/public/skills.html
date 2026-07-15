@@ -4,9 +4,10 @@
 
 {% block content %}
 <!-- Skills Hero Section -->
-<section class="py-20">
+<section class="page-hero section-shell py-20">
     <div class="container mx-auto px-4">
         <div class="text-center mb-16">
+            <span class="eyebrow">Capabilities</span>
             <h1 class="text-5xl font-bold font-poppins mb-4">
                 My <span class="text-accent-primary">Skills</span>
             </h1>
@@ -18,7 +19,7 @@
 
         <!-- Skills by Category -->
         {% for category, skills in skills_by_category.items %}
-        <div class="mb-16 animate-fade-in">
+        <div class="reveal-on-scroll mb-16 animate-fade-in">
             <div class="mb-8">
                 <h2 class="text-3xl font-bold font-poppins mb-2">{{ category }}</h2>
                 <div class="w-16 h-1 bg-accent-primary rounded-full"></div>
@@ -26,7 +27,7 @@
 
             <div class="grid md:grid-cols-2 gap-6">
                 {% for skill in skills %}
-                <div class="bg-card border border-color rounded-lg p-6 hover:border-accent-primary transition-all duration-300 group">
+                <div class="skill-card text-left p-6 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
                             {% if skill.icon %}
@@ -64,7 +65,7 @@
 
         {% if show_skills_summary %}
         <!-- Skills Overview Stats -->
-        <div class="mt-20 bg-secondary rounded-2xl p-12">
+        <div class="surface-panel reveal-on-scroll mt-20 p-8 md:p-12">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-bold font-poppins mb-4">Skills Summary</h2>
                 <p class="text-secondary">Quick overview of my expertise areas</p>
@@ -94,7 +95,7 @@
 
         {% if show_cta_section %}
         <!-- Call to Action -->
-        <div class="mt-20 text-center">
+        <div class="cta-panel reveal-on-scroll mt-20 rounded-2xl p-8 md:p-12 text-center text-white">
             <h2 class="text-3xl font-bold font-poppins mb-4">{{ cta_title }}</h2>
             <p class="text-secondary mb-8">{{ cta_description }}</p>
             <div class="flex justify-center gap-4">

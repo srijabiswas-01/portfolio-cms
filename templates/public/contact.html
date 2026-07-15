@@ -4,11 +4,12 @@
 
 {% block content %}
 <!-- Contact Hero -->
-<section class="py-20">
+<section class="page-hero section-shell py-20">
     <div class="container mx-auto px-4">
         {% if contact_page_visibility.page_header %}
         <div class="text-center mb-16">
             {% if contact_page_visibility.page_title %}
+            <span class="eyebrow">Start a conversation</span>
             <h1 class="text-5xl font-bold font-poppins mb-4">
                 {{ contact_page.page_title|default:"Get In " }}<span class="text-accent-primary">Touch</span>
             </h1>
@@ -22,7 +23,7 @@
         </div>
         {% endif %}
 
-        <div class="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <div class="reveal-on-scroll grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             <!-- Contact Information -->
             <div>
             {% if contact_page_visibility.connect_section %}
@@ -176,7 +177,7 @@
         </div> {% endcomment %}
 <!-- Contact Form -->
 {% if contact_page_visibility.contact_form %}
-<div class="bg-card border border-color rounded-2xl p-8">
+<div class="surface-panel p-8">
     <h2 class="text-2xl font-bold font-poppins mb-6">Send a Message</h2>
     
     <form id="contactForm" method="POST" class="space-y-6">

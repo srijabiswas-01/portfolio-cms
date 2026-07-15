@@ -1,12 +1,20 @@
 <!-- templates/public/base.html -->
  {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portfolio{% endblock %}</title>
     
+    <script>
+        (() => {
+            const savedTheme = localStorage.getItem('portfolio-theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            document.documentElement.dataset.theme = savedTheme || systemTheme;
+        })();
+    </script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,35 +32,46 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-primary text-primary font-inter">
+    <a href="#main-content" class="skip-link">Skip to content</a>
     
     <!-- Navigation -->
-    <nav class="fixed w-full top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-color shadow-md">
-        <div class="container mx-auto px-4 py-4">
+    <nav id="site-nav" class="site-nav fixed w-full top-0 z-50 border-b border-color">
+        <div class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <!-- Logo -->
                 <a href="{% url 'home' %}" class="text-2xl font-bold font-poppins">
-                    <span class="text-accent-primary">SB</span>
-                    <span class="text-white">.Portfolio</span>
+                    <span class="text-accent-primary">Srija</span>
+                    <span class="logo-suffix"> Biswas</span>
                 </a>
                 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex space-x-8">
+                <div class="hidden md:flex items-center gap-1">
                     <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
                     <a href="{% url 'about' %}" class="nav-link {% if 'about' in request.path %}active{% endif %}">About</a>
                     <a href="{% url 'skills' %}" class="nav-link {% if 'skills' in request.path %}active{% endif %}">Skills</a>
                     <a href="{% url 'projects' %}" class="nav-link {% if 'projects' in request.path %}active{% endif %}">Projects</a>
                     <a href="{% url 'blogs' %}" class="nav-link {% if 'blog' in request.path %}active{% endif %}">Blog</a>
                     <a href="{% url 'contact' %}" class="nav-link {% if 'contact' in request.path %}active{% endif %}">Contact</a>
+                    <button class="theme-toggle ml-3" type="button" data-theme-toggle aria-label="Switch to light mode" title="Change color theme">
+                        <i class="bi bi-moon-stars-fill theme-icon-light" aria-hidden="true"></i>
+                        <i class="bi bi-sun-fill theme-icon-dark" aria-hidden="true"></i>
+                    </button>
                 </div>
                 
                 <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="md:hidden text-white text-2xl">
+                <div class="flex items-center gap-2 md:hidden">
+                    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode" title="Change color theme">
+                        <i class="bi bi-moon-stars-fill theme-icon-light" aria-hidden="true"></i>
+                        <i class="bi bi-sun-fill theme-icon-dark" aria-hidden="true"></i>
+                    </button>
+                    <button id="mobile-menu-btn" class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open navigation">
                     <i class="bi bi-list"></i>
-                </button>
+                    </button>
+                </div>
             </div>
             
             <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4">
+            <div id="mobile-menu" class="mobile-menu hidden md:hidden mt-3 pb-3">
                 <div class="flex flex-col space-y-3">
                     <a href="{% url 'home' %}" class="mobile-nav-link">Home</a>
                     <a href="{% url 'about' %}" class="mobile-nav-link">About</a>
@@ -66,35 +85,35 @@
     </nav>
     
     <!-- Main Content -->
-    <main class="pt-20">
+    <main id="main-content" class="pt-20">
         {% block content %}{% endblock %}
     </main>
     
     <!-- Footer -->
-    <footer class="bg-secondary border-t border-color mt-20">
+    <footer class="site-footer bg-secondary border-t border-color mt-20">
         <div class="container mx-auto px-4 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="footer-grid grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- About Section -->
-                <div>
-                    <h3 class="text-xl font-bold font-poppins mb-4">SB.Portfolio</h3>
+                <div class="footer-column footer-brand">
+                    <h3 class="footer-logo text-xl font-bold font-poppins mb-4"><span class="text-accent-primary">Srija</span> Biswas</h3>
                     <p class="text-secondary text-sm">
-                        MCA Student passionate about Data Science, AI/ML, and Web Development.
+                        {{ profile.role|default:"Building thoughtful digital experiences with data, AI, and modern web technology." }}
                     </p>
                 </div>
                 
                 <!-- Quick Links -->
-                <div>
+                <div class="footer-column">
                     <h3 class="text-lg font-semibold font-poppins mb-4">Quick Links</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="{% url 'projects' %}" class="text-secondary hover:text-accent-primary transition">Projects</a></li>
-                        <li><a href="{% url 'blogs' %}" class="text-secondary hover:text-accent-primary transition">Blog</a></li>
-                        <li><a href="{% url 'skills' %}" class="text-secondary hover:text-accent-primary transition">Skills</a></li>
-                        <li><a href="{% url 'contact' %}" class="text-secondary hover:text-accent-primary transition">Contact</a></li>
+                        <li><a href="{% url 'projects' %}" class="footer-link text-secondary">Projects</a></li>
+                        <li><a href="{% url 'blogs' %}" class="footer-link text-secondary">Blog</a></li>
+                        <li><a href="{% url 'skills' %}" class="footer-link text-secondary">Skills</a></li>
+                        <li><a href="{% url 'contact' %}" class="footer-link text-secondary">Contact</a></li>
                     </ul>
                 </div>
                 
                 <!-- Social Links -->
-                <div>
+                <div class="footer-column">
                     <h3 class="text-lg font-semibold font-poppins mb-4">Connect</h3>
                     <div class="flex space-x-4">
                         {% if profile.github %}
@@ -114,20 +133,12 @@
             </div>
             
             <div class="border-t border-color mt-8 pt-8 text-center text-sm text-muted">
-                <p>&copy; 2024 NS Portfolio. All rights reserved.</p>
+                <p>&copy; {{ current_year }} {{ profile.name|default:"Srija Biswas" }}. Crafted with curiosity and care.</p>
             </div>
         </div>
     </footer>
     
-    <script>
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    </script>
+    <script src="{% static 'js/main.js' %}" defer></script>
     
     {% block extra_js %}{% endblock %}
 </body>

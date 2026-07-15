@@ -20,17 +20,17 @@
     <!-- Custom Admin CSS -->
     <link rel="stylesheet" href="{% static 'css/base-admin.css' %}">
 </head>
-<body class="admin-body" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1A1F36 0%, #0F172A 100%);">
+<body class="admin-body admin-login-page">
     
     <!-- Login Container -->
-    <div style="width: 100%; max-width: 450px; padding: 2rem;">
+    <div class="admin-login-container">
         
         <!-- Login Card -->
-        <div style="background: var(--admin-bg-card); border: 1px solid var(--admin-border-color); border-radius: 1rem; padding: 3rem; box-shadow: var(--admin-shadow-lg);">
+        <div class="admin-login-card">
             
             <!-- Logo -->
             <div style="text-align: center; margin-bottom: 2rem;">
-                <div style="width: 80px; height: 80px; background: var(--admin-accent-primary); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 30px rgba(92, 124, 250, 0.3);">
+                <div class="admin-login-icon">
                     <i class="bi bi-shield-lock" style="font-size: 2.5rem; color: white;"></i>
                 </div>
                 <h1 style="font-size: 2rem; font-weight: 700; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
@@ -121,8 +121,8 @@
         </div>
         
         <!-- Footer -->
-        <div style="text-align: center; margin-top: 2rem; color: var(--admin-text-muted); font-size: 0.875rem;">
-            <p>&copy; 2024 Portfolio Admin Panel. All rights reserved.</p>
+        <div class="admin-login-footer">
+            <p>&copy; {% now "Y" %} Srija CMS. All rights reserved.</p>
         </div>
     </div>
     
