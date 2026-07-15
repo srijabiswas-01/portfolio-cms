@@ -95,6 +95,9 @@
                         <span class="external-platform-badge platform-{{ article.platform }}">{{ article.platform|title }}</span>
                     </a>
                     <div class="p-6">
+                        {% if article.category %}
+                        <a href="?category={{ article.category.slug }}" class="tag-badge mb-3">{{ article.category.name }}</a>
+                        {% endif %}
                         {% if article.published_date %}<p class="text-sm text-muted mb-3"><i class="bi bi-calendar3 mr-1"></i>{{ article.published_date }}</p>{% endif %}
                         <h3 class="text-xl font-bold font-poppins mb-3 line-clamp-2">{{ article.title }}</h3>
                         {% if article.preview %}<p class="text-secondary text-sm mb-5 line-clamp-3">{{ article.preview }}</p>{% endif %}

@@ -339,7 +339,7 @@ def blog_list(request):
         Q(category__exists=False)
     )
     all_blogs = Blog.objects.filter(status='published', is_active=True).filter(category_visibility).order_by('-published_date')
-    external_blogs = ExternalBlog.objects.filter(is_active=True).order_by('-published_date')
+    external_blogs = ExternalBlog.objects.filter(is_active=True).filter(category_visibility).order_by('-published_date')
     
     # Search functionality
     search_query = request.GET.get('search', '')
@@ -358,6 +358,7 @@ def blog_list(request):
     if category_filter:
         category = BlogCategory.objects.filter(slug=category_filter, is_active=True).first()
         all_blogs = all_blogs.filter(category=category) if category else []
+        external_blogs = external_blogs.filter(category=category) if category else []
 
     # Filter by tag
     tag_filter = request.GET.get('tag', '')

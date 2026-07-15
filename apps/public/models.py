@@ -414,12 +414,17 @@ class ExternalBlog(TimestampedDocument):
     preview = StringField(max_length=300, default="")
     image_url = StringField(default="")
     published_date = StringField(max_length=10, default="")
+    category = ReferenceField(BlogCategory, reverse_delete_rule=NULLIFY)
     is_active = BooleanField(default=True)
 
     meta = {"collection": "external_blogs", "ordering": ["-published_date", "-created_at"]}
 
     def __str__(self):
         return self.title
+
+    @property
+    def category_name(self):
+        return self.category.name if self.category else "Uncategorized"
 
 class HomePage(SingletonDocument):
     hero_title = StringField(max_length=200, default="Your Name")

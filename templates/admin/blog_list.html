@@ -196,38 +196,48 @@
         <span class="admin-badge admin-badge-info">{{ external_blogs|length }} links</span>
     </div>
 
-    <form method="POST" action="{% url 'admin_external_blog_create' %}" class="external-blog-form">
+    <form method="POST" action="{% if external_edit %}{% url 'admin_external_blog_edit' external_edit.id_str %}{% else %}{% url 'admin_external_blog_create' %}{% endif %}" class="external-blog-form">
         {% csrf_token %}
         <div class="admin-form-group">
             <label class="admin-form-label" for="external_title">Article title *</label>
-            <input id="external_title" name="title" class="admin-form-input" required>
+            <input id="external_title" name="title" class="admin-form-input" value="{{ external_edit.title|default:'' }}" required>
         </div>
         <div class="admin-form-group">
             <label class="admin-form-label" for="external_platform">Platform *</label>
             <select id="external_platform" name="platform" class="admin-form-select" required>
-                <option value="medium">Medium</option>
-                <option value="blogger">Blogger</option>
-                <option value="other">Other</option>
+                <option value="medium" {% if external_edit.platform == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="blogger" {% if external_edit.platform == 'blogger' %}selected{% endif %}>Blogger</option>
+                <option value="other" {% if external_edit.platform == 'other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <div class="admin-form-group">
+            <label class="admin-form-label" for="external_category">Category</label>
+            <select id="external_category" name="category_id" class="admin-form-select">
+                <option value="">Uncategorized</option>
+                {% for category in blog_categories %}
+                <option value="{{ category.id_str }}" {% if external_edit.category.id_str == category.id_str %}selected{% endif %}>{{ category.name }}{% if not category.is_active %} (Inactive){% endif %}</option>
+                {% endfor %}
             </select>
         </div>
         <div class="admin-form-group external-url-field">
             <label class="admin-form-label" for="external_url">Article URL *</label>
-            <input id="external_url" name="url" type="url" class="admin-form-input" placeholder="https://medium.com/@username/article" required>
+            <input id="external_url" name="url" type="url" class="admin-form-input" value="{{ external_edit.url|default:'' }}" placeholder="https://medium.com/@username/article" required>
         </div>
         <div class="admin-form-group">
             <label class="admin-form-label" for="external_date">Published date</label>
-            <input id="external_date" name="published_date" type="date" class="admin-form-input">
+            <input id="external_date" name="published_date" type="date" class="admin-form-input" value="{{ external_edit.published_date|default:'' }}">
         </div>
         <div class="admin-form-group external-image-field">
             <label class="admin-form-label" for="external_image">Cover image URL</label>
-            <input id="external_image" name="image_url" type="url" class="admin-form-input" placeholder="https://example.com/image.jpg">
+            <input id="external_image" name="image_url" type="url" class="admin-form-input" value="{{ external_edit.image_url|default:'' }}" placeholder="https://example.com/image.jpg">
         </div>
         <div class="admin-form-group external-preview-field">
             <label class="admin-form-label" for="external_preview">Short summary</label>
-            <textarea id="external_preview" name="preview" class="admin-form-textarea" maxlength="300" rows="3" placeholder="What is this article about?"></textarea>
+            <textarea id="external_preview" name="preview" class="admin-form-textarea" maxlength="300" rows="3" placeholder="What is this article about?">{{ external_edit.preview|default:'' }}</textarea>
         </div>
-        <label class="external-active-check"><input type="checkbox" name="is_active" checked> Show on public Blog page</label>
-        <button type="submit" class="admin-btn-primary"><i class="bi bi-plus-lg"></i> Add External Article</button>
+        <label class="external-active-check"><input type="checkbox" name="is_active" {% if not external_edit or external_edit.is_active %}checked{% endif %}> Show on public Blog page</label>
+        <button type="submit" class="admin-btn-primary"><i class="bi bi-{% if external_edit %}check-lg{% else %}plus-lg{% endif %}"></i> {% if external_edit %}Save Article{% else %}Add External Article{% endif %}</button>
+        {% if external_edit %}<a href="{% url 'admin_blogs_list' %}" class="admin-btn-secondary">Cancel Edit</a>{% endif %}
     </form>
 
     <div class="external-blog-list">
@@ -236,11 +246,13 @@
             <span class="external-platform-badge platform-{{ external.platform }}">{{ external.platform|title }}</span>
             <div class="external-blog-admin-copy">
                 <strong>{{ external.title }}</strong>
+                <span class="admin-badge admin-badge-info">{{ external.category_name }}</span>
                 <a href="{{ external.url }}" target="_blank" rel="noopener noreferrer">{{ external.url|truncatechars:65 }}</a>
             </div>
             {% if external.is_active %}<span class="admin-badge admin-badge-success">Active</span>{% else %}<span class="admin-badge admin-badge-warning">Inactive</span>{% endif %}
             <div class="external-blog-admin-actions">
                 <a href="{{ external.url }}" target="_blank" rel="noopener noreferrer" class="admin-btn-secondary" title="Open article"><i class="bi bi-box-arrow-up-right"></i></a>
+                <a href="{% url 'admin_blogs_list' %}?edit_external={{ external.id_str }}#external_title" class="admin-btn-secondary" title="Edit article"><i class="bi bi-pencil"></i></a>
                 <form method="POST" action="{% url 'admin_external_blog_toggle_active' external.id_str %}">{% csrf_token %}<button class="admin-btn-secondary" title="Toggle visibility"><i class="bi bi-{% if external.is_active %}toggle-on{% else %}toggle-off{% endif %}"></i></button></form>
                 <form method="POST" action="{% url 'admin_external_blog_delete' external.id_str %}" onsubmit="return confirm('Delete this external blog link?');">{% csrf_token %}<button class="admin-btn-danger" title="Delete"><i class="bi bi-trash"></i></button></form>
             </div>

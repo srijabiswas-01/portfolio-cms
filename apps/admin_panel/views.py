@@ -103,6 +103,10 @@ def blogs_list(request):
     blogs_count = Blog.objects.count()
     published_blogs = Blog.objects.filter(status='published').count()
     draft_blogs = Blog.objects.filter(status='draft').count()
+    external_edit = None
+    external_edit_id = request.GET.get('edit_external', '').strip()
+    if external_edit_id:
+        external_edit = get_document_or_404(ExternalBlog, id=external_edit_id)
     
     context = {
         'blogs': blogs,
@@ -110,6 +114,7 @@ def blogs_list(request):
         'published_blogs': published_blogs,
         'draft_blogs': draft_blogs,
         'external_blogs': ExternalBlog.objects.all(),
+        'external_edit': external_edit,
         'blog_categories': BlogCategory.objects.all(),
     }
     return render(request, 'admin/blog_list.html', context)
@@ -247,6 +252,8 @@ def blog_toggle_active(request, id):
 @login_required
 def external_blog_create(request):
     if request.method == 'POST':
+        category_id = request.POST.get('category_id', '').strip()
+        category = BlogCategory.objects.filter(id=category_id).first() if category_id else None
         ExternalBlog(
             title=request.POST.get('title', '').strip(),
             platform=request.POST.get('platform', 'medium'),
@@ -254,9 +261,28 @@ def external_blog_create(request):
             preview=request.POST.get('preview', '').strip()[:300],
             image_url=request.POST.get('image_url', '').strip(),
             published_date=request.POST.get('published_date', ''),
+            category=category,
             is_active=request.POST.get('is_active') == 'on',
         ).save()
         messages.success(request, 'External blog link added successfully.')
+    return redirect('admin_blogs_list')
+
+
+@login_required
+def external_blog_edit(request, id):
+    blog = get_document_or_404(ExternalBlog, id=id)
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id', '').strip()
+        blog.title = request.POST.get('title', '').strip()
+        blog.platform = request.POST.get('platform', 'medium')
+        blog.url = request.POST.get('url', '').strip()
+        blog.preview = request.POST.get('preview', '').strip()[:300]
+        blog.image_url = request.POST.get('image_url', '').strip()
+        blog.published_date = request.POST.get('published_date', '')
+        blog.category = BlogCategory.objects.filter(id=category_id).first() if category_id else None
+        blog.is_active = request.POST.get('is_active') == 'on'
+        blog.save()
+        messages.success(request, f'External article "{blog.title}" updated successfully.')
     return redirect('admin_blogs_list')
 
 
