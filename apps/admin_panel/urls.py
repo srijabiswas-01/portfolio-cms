@@ -105,6 +105,10 @@ urlpatterns = [
     
     # Profile Management
     path('profile/', views.profile_manager, name='admin_profile_manager'),
+    path('profile/resumes/<str:id>/activate/', views.resume_activate, name='admin_resume_activate'),
+    path('profile/resumes/<str:id>/deactivate/', views.resume_deactivate, name='admin_resume_deactivate'),
+    path('profile/resumes/<str:id>/delete/', views.resume_delete, name='admin_resume_delete'),
+    path('profile/resumes/<str:id>/view/', views.resume_admin_file, name='admin_resume_file'),
     path('contact-submissions/', views.contact_submissions, name='admin_contact_submissions'),
     path('contact-submissions/bulk-action/', views.contact_submissions_bulk_action, name='admin_contact_submissions_bulk_action'),
     path('contact-submissions/<str:id>/', views.contact_submission_detail, name='admin_contact_submission_detail'),

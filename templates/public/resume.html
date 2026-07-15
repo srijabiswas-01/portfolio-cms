@@ -1,0 +1,186 @@
+{% extends 'public/base.html' %}
+
+{% block title %}Resume - Srija Biswas{% endblock %}
+
+{% block content %}
+<section class="resume-page page-hero section-shell py-20">
+    <div class="container mx-auto px-4">
+        <header class="text-center mb-10">
+            <span class="eyebrow">Experience &amp; qualifications</span>
+            <h1 class="text-5xl font-bold font-poppins mb-4">My <span class="text-accent-primary">Resume</span></h1>
+            <p class="section-subtitle">View my professional background, skills, education, and experience.</p>
+        </header>
+
+        {% if active_resume %}
+        <div class="resume-actions flex flex-wrap justify-center gap-4 mb-8">
+            <a href="{% url 'resume_download' %}" class="btn-primary">
+                <i class="bi bi-download"></i>
+                Download PDF
+            </a>
+        </div>
+
+        <div id="resumeViewer" class="resume-viewer surface-panel reveal-on-scroll" aria-label="Resume PDF viewer">
+            <div class="pdf-toolbar" role="toolbar" aria-label="PDF controls">
+                <div class="pdf-toolbar-group">
+                    <button type="button" id="pdfPrev" class="pdf-tool" aria-label="Previous page" title="Previous page"><i class="bi bi-chevron-left"></i></button>
+                    <span class="pdf-page-control"><input id="pdfPageNumber" type="number" min="1" value="1" aria-label="Page number"> <span>/ <strong id="pdfPageCount">–</strong></span></span>
+                    <button type="button" id="pdfNext" class="pdf-tool" aria-label="Next page" title="Next page"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                <div class="pdf-toolbar-group">
+                    <button type="button" id="pdfZoomOut" class="pdf-tool" aria-label="Zoom out" title="Zoom out"><i class="bi bi-dash-lg"></i></button>
+                    <span id="pdfZoomLevel" class="pdf-zoom-level">100%</span>
+                    <button type="button" id="pdfZoomIn" class="pdf-tool" aria-label="Zoom in" title="Zoom in"><i class="bi bi-plus-lg"></i></button>
+                    <button type="button" id="pdfFit" class="pdf-tool" aria-label="Fit page width" title="Fit page width"><i class="bi bi-arrows-fullscreen"></i></button>
+                    <button type="button" id="pdfRotate" class="pdf-tool" aria-label="Rotate page" title="Rotate page"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+                <div class="pdf-toolbar-group pdf-toolbar-actions">
+                    <button type="button" id="pdfPrint" class="pdf-tool" aria-label="Print PDF" title="Print"><i class="bi bi-printer"></i></button>
+                    <a href="{% url 'resume_download' %}" class="pdf-tool" aria-label="Download PDF" title="Download"><i class="bi bi-download"></i></a>
+                    <button type="button" id="pdfFullscreen" class="pdf-tool" aria-label="View fullscreen" title="Fullscreen"><i class="bi bi-fullscreen"></i></button>
+                </div>
+            </div>
+
+            <div class="pdf-workspace">
+                <aside id="pdfThumbnails" class="pdf-thumbnails" aria-label="Page thumbnails"></aside>
+                <div id="pdfStage" class="pdf-stage">
+                    <div id="pdfLoading" class="pdf-loading"><span class="pdf-spinner"></span>Loading resume…</div>
+                    <canvas id="pdfCanvas" aria-label="Current resume page"></canvas>
+                </div>
+            </div>
+            <p class="pdf-viewer-help">Use the toolbar to navigate, zoom, print, open, or download the resume.</p>
+        </div>
+        {% else %}
+        <div class="resume-empty surface-panel text-center">
+            <i class="bi bi-file-earmark-person"></i>
+            <h2 class="text-2xl font-bold font-poppins mb-2">Resume coming soon</h2>
+            <p class="text-secondary">The latest resume has not been uploaded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if active_resume %}
+<script type="module">
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.7.284/pdf.min.mjs';
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.7.284/pdf.worker.min.mjs';
+
+    const pdfUrl = '{% url "resume_file" %}';
+    const viewer = document.getElementById('resumeViewer');
+    const stage = document.getElementById('pdfStage');
+    const canvas = document.getElementById('pdfCanvas');
+    const context = canvas.getContext('2d');
+    const loading = document.getElementById('pdfLoading');
+    const pageInput = document.getElementById('pdfPageNumber');
+    const pageCount = document.getElementById('pdfPageCount');
+    const zoomLevel = document.getElementById('pdfZoomLevel');
+    const thumbnails = document.getElementById('pdfThumbnails');
+
+    let pdfDocument = null;
+    let pageNumber = 1;
+    let scale = 1;
+    let rotation = 0;
+    let rendering = false;
+    let pendingPage = null;
+
+    async function renderPage(number) {
+        if (!pdfDocument) return;
+        rendering = true;
+        loading.hidden = false;
+        const page = await pdfDocument.getPage(number);
+        const viewport = page.getViewport({ scale, rotation });
+        const pixelRatio = window.devicePixelRatio || 1;
+
+        canvas.width = Math.floor(viewport.width * pixelRatio);
+        canvas.height = Math.floor(viewport.height * pixelRatio);
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+
+        await page.render({
+            canvasContext: context,
+            viewport,
+            transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0],
+        }).promise;
+
+        pageNumber = number;
+        pageInput.value = number;
+        zoomLevel.textContent = `${Math.round(scale * 100)}%`;
+        thumbnails.querySelectorAll('.pdf-thumbnail').forEach((item, index) => item.classList.toggle('active', index + 1 === number));
+        loading.hidden = true;
+        rendering = false;
+
+        if (pendingPage !== null) {
+            const nextPage = pendingPage;
+            pendingPage = null;
+            renderPage(nextPage);
+        }
+    }
+
+    function queuePage(number) {
+        number = Math.max(1, Math.min(pdfDocument.numPages, number));
+        if (rendering) pendingPage = number;
+        else renderPage(number);
+    }
+
+    async function buildThumbnails() {
+        for (let number = 1; number <= pdfDocument.numPages; number += 1) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'pdf-thumbnail';
+            button.setAttribute('aria-label', `Show page ${number}`);
+            const thumbCanvas = document.createElement('canvas');
+            const label = document.createElement('span');
+            label.textContent = number;
+            button.append(thumbCanvas, label);
+            button.addEventListener('click', () => queuePage(number));
+            thumbnails.appendChild(button);
+
+            const page = await pdfDocument.getPage(number);
+            const baseViewport = page.getViewport({ scale: 1 });
+            const thumbScale = 132 / baseViewport.width;
+            const viewport = page.getViewport({ scale: thumbScale });
+            thumbCanvas.width = viewport.width;
+            thumbCanvas.height = viewport.height;
+            await page.render({ canvasContext: thumbCanvas.getContext('2d'), viewport }).promise;
+        }
+    }
+
+    async function fitWidth() {
+        if (!pdfDocument) return;
+        const page = await pdfDocument.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 1, rotation });
+        scale = Math.max(.45, Math.min(2.5, (stage.clientWidth - 48) / viewport.width));
+        queuePage(pageNumber);
+    }
+
+    document.getElementById('pdfPrev').addEventListener('click', () => queuePage(pageNumber - 1));
+    document.getElementById('pdfNext').addEventListener('click', () => queuePage(pageNumber + 1));
+    pageInput.addEventListener('change', () => queuePage(Number(pageInput.value) || 1));
+    document.getElementById('pdfZoomOut').addEventListener('click', () => { scale = Math.max(.4, scale - .15); queuePage(pageNumber); });
+    document.getElementById('pdfZoomIn').addEventListener('click', () => { scale = Math.min(3, scale + .15); queuePage(pageNumber); });
+    document.getElementById('pdfFit').addEventListener('click', fitWidth);
+    document.getElementById('pdfRotate').addEventListener('click', () => { rotation = (rotation + 90) % 360; fitWidth(); });
+    document.getElementById('pdfFullscreen').addEventListener('click', () => viewer.requestFullscreen?.());
+    document.getElementById('pdfPrint').addEventListener('click', () => {
+        const printFrame = document.createElement('iframe');
+        printFrame.style.display = 'none';
+        printFrame.src = pdfUrl;
+        printFrame.onload = () => { printFrame.contentWindow.focus(); printFrame.contentWindow.print(); };
+        document.body.appendChild(printFrame);
+    });
+
+    try {
+        pdfDocument = await pdfjsLib.getDocument(pdfUrl).promise;
+        pageCount.textContent = pdfDocument.numPages;
+        pageInput.max = pdfDocument.numPages;
+        await fitWidth();
+        buildThumbnails();
+    } catch (error) {
+        loading.innerHTML = '<i class="bi bi-exclamation-triangle"></i> The PDF preview could not be loaded. Use Open PDF or Download PDF above.';
+        console.error('Resume PDF preview failed:', error);
+    }
+</script>
+{% endif %}
+{% endblock %}

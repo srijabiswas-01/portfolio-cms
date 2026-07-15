@@ -4,6 +4,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
+from django.utils.http import content_disposition_header
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from mongoengine.queryset.visitor import Q
 
@@ -27,6 +29,7 @@ from .models import (
     Project,
     ResearchCategory,
     ResearchEntry,
+    ResumeFile,
     Skill,
 )
 
@@ -97,6 +100,41 @@ def profile_image(request):
     response["Cache-Control"] = "no-cache"
     response["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+def resume_page(request):
+    """Display the public resume viewer."""
+    profile = Profile.objects.first()
+    active_resume = ResumeFile.objects(is_active=True).first()
+    return render(
+        request,
+        "public/resume.html",
+        {"profile": profile, "active_resume": active_resume},
+    )
+
+
+def _resume_response(as_attachment=False):
+    active_resume = ResumeFile.objects(is_active=True).first()
+    if not active_resume:
+        raise Http404("Resume not found")
+
+    filename = active_resume.name or "Srija-Biswas-Resume.pdf"
+    response = HttpResponse(bytes(active_resume.data), content_type="application/pdf")
+
+    response["Content-Disposition"] = content_disposition_header(as_attachment, filename)
+    response["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@xframe_options_sameorigin
+def resume_file(request):
+    """Serve the resume inline for the public viewer."""
+    return _resume_response(as_attachment=False)
+
+
+def resume_download(request):
+    """Download the resume as a PDF."""
+    return _resume_response(as_attachment=True)
 
 
 def about(request):

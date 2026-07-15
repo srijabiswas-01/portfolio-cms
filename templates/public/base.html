@@ -39,17 +39,18 @@
         <div class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <!-- Logo -->
-                <a href="{% url 'home' %}" class="text-2xl font-bold font-poppins">
-                    <span class="text-accent-primary">Srija</span>
-                    <span class="logo-suffix"> Biswas</span>
+                <a href="{% url 'home' %}" class="site-brand text-2xl font-bold font-poppins" aria-label="Srija Biswas — Home">
+                    <span class="brand-first">Srija</span>
+                    <span class="brand-last">Biswas</span>
                 </a>
                 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center gap-1">
+                <div class="hidden lg:flex items-center gap-1">
                     <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
                     <a href="{% url 'about' %}" class="nav-link {% if 'about' in request.path %}active{% endif %}">About</a>
                     <a href="{% url 'skills' %}" class="nav-link {% if 'skills' in request.path %}active{% endif %}">Skills</a>
                     <a href="{% url 'projects' %}" class="nav-link {% if 'projects' in request.path %}active{% endif %}">Projects</a>
+                    {% if active_resume %}<a href="{% url 'resume' %}" class="nav-link {% if 'resume' in request.path %}active{% endif %}">Resume</a>{% endif %}
                     <a href="{% url 'blogs' %}" class="nav-link {% if 'blog' in request.path %}active{% endif %}">Blog</a>
                     <a href="{% url 'contact' %}" class="nav-link {% if 'contact' in request.path %}active{% endif %}">Contact</a>
                     <button class="theme-toggle ml-3" type="button" data-theme-toggle aria-label="Switch to light mode" title="Change color theme">
@@ -59,7 +60,7 @@
                 </div>
                 
                 <!-- Mobile Menu Button -->
-                <div class="flex items-center gap-2 md:hidden">
+                <div class="flex items-center gap-2 lg:hidden">
                     <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to light mode" title="Change color theme">
                         <i class="bi bi-moon-stars-fill theme-icon-light" aria-hidden="true"></i>
                         <i class="bi bi-sun-fill theme-icon-dark" aria-hidden="true"></i>
@@ -71,12 +72,13 @@
             </div>
             
             <!-- Mobile Menu -->
-            <div id="mobile-menu" class="mobile-menu hidden md:hidden mt-3 pb-3">
+            <div id="mobile-menu" class="mobile-menu hidden lg:hidden mt-3 pb-3">
                 <div class="flex flex-col space-y-3">
                     <a href="{% url 'home' %}" class="mobile-nav-link">Home</a>
                     <a href="{% url 'about' %}" class="mobile-nav-link">About</a>
                     <a href="{% url 'skills' %}" class="mobile-nav-link">Skills</a>
                     <a href="{% url 'projects' %}" class="mobile-nav-link">Projects</a>
+                    {% if active_resume %}<a href="{% url 'resume' %}" class="mobile-nav-link">Resume</a>{% endif %}
                     <a href="{% url 'blogs' %}" class="mobile-nav-link">Blog</a>
                     <a href="{% url 'contact' %}" class="mobile-nav-link">Contact</a>
                 </div>
@@ -95,7 +97,7 @@
             <div class="footer-grid grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- About Section -->
                 <div class="footer-column footer-brand">
-                    <h3 class="footer-logo text-xl font-bold font-poppins mb-4"><span class="text-accent-primary">Srija</span> Biswas</h3>
+                    <h3 class="footer-logo brand-lockup text-xl font-bold font-poppins mb-4"><span class="brand-first">Srija</span> <span class="brand-last">Biswas</span></h3>
                     <p class="text-secondary text-sm">
                         {{ profile.role|default:"Building thoughtful digital experiences with data, AI, and modern web technology." }}
                     </p>
@@ -108,6 +110,7 @@
                         <li><a href="{% url 'projects' %}" class="footer-link text-secondary">Projects</a></li>
                         <li><a href="{% url 'blogs' %}" class="footer-link text-secondary">Blog</a></li>
                         <li><a href="{% url 'skills' %}" class="footer-link text-secondary">Skills</a></li>
+                        {% if active_resume %}<li><a href="{% url 'resume' %}" class="footer-link text-secondary">Resume</a></li>{% endif %}
                         <li><a href="{% url 'contact' %}" class="footer-link text-secondary">Contact</a></li>
                     </ul>
                 </div>

@@ -94,12 +94,14 @@
                     {% endfor %}
                 </div>
                 {% endif %}
+                {% if active_resume %}
                 <div class="pt-4">
-                    <a href="{{ profile.resume }}" download class="btn-primary">
+                    <a href="{% url 'resume_download' %}" class="btn-primary">
                         <i class="bi bi-download mr-2"></i>
                         Download Resume
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
         {% if research_data %}

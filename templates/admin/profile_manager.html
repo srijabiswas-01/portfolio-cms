@@ -173,29 +173,31 @@
                 Resume / CV
             </h2>
             
-            {% if profile.resume %}
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: var(--admin-bg-secondary); border: 1px solid var(--admin-border-color); border-radius: 0.5rem; margin-bottom: 1rem;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <i class="bi bi-file-pdf" style="font-size: 2rem; color: var(--admin-accent-error);"></i>
-                    <div>
-                        <p style="font-weight: 500; color: var(--admin-text-primary);">Current Resume</p>
-                        <p style="font-size: 0.75rem; color: var(--admin-text-muted);">
-                            {{ profile.resume.name|slice:"8:" }}
-                        </p>
+            <div class="resume-admin-list">
+                {% for resume in resumes %}
+                <div class="resume-admin-item {% if resume.is_active %}is-active{% endif %}">
+                    <div class="resume-admin-icon"><i class="bi bi-file-earmark-pdf"></i></div>
+                    <div class="resume-admin-meta">
+                        <div class="resume-admin-title-row">
+                            <strong>{{ resume.name }}</strong>
+                            {% if resume.is_active %}<span class="admin-badge admin-badge-success">Active</span>{% else %}<span class="admin-badge admin-badge-info">Inactive</span>{% endif %}
+                        </div>
+                        <span>Uploaded {{ resume.created_at|date:"M d, Y · h:i A" }}</span>
+                    </div>
+                    <div class="resume-admin-actions">
+                        <a href="{% url 'admin_resume_file' resume.id_str %}" target="_blank" class="admin-btn-secondary"><i class="bi bi-eye"></i> View</a>
+                        {% if resume.is_active %}
+                        <button type="submit" formaction="{% url 'admin_resume_deactivate' resume.id_str %}" formmethod="post" class="admin-btn-secondary"><i class="bi bi-toggle-on"></i> Deactivate</button>
+                        {% else %}
+                        <button type="submit" formaction="{% url 'admin_resume_activate' resume.id_str %}" formmethod="post" class="admin-btn-success"><i class="bi bi-check-circle"></i> Make Active</button>
+                        {% endif %}
+                        <button type="submit" formaction="{% url 'admin_resume_delete' resume.id_str %}" formmethod="post" class="admin-btn-danger" onclick="return confirm('Permanently delete this resume from MongoDB?');"><i class="bi bi-trash"></i> Delete</button>
                     </div>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <a href="{{ profile.resume.url }}" target="_blank" class="admin-btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        <i class="bi bi-download mr-1"></i>
-                        Download
-                    </a>
-                    <button type="submit" name="remove_resume" value="1" class="admin-btn-danger" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                        <i class="bi bi-trash mr-1"></i>
-                        Delete
-                    </button>
-                </div>
+                {% empty %}
+                <div class="resume-admin-empty"><i class="bi bi-file-earmark-plus"></i><p>No resumes uploaded yet.</p></div>
+                {% endfor %}
             </div>
-            {% endif %}
             
             <label for="resume" class="admin-btn-secondary" style="cursor: pointer; display: inline-flex;">
                 <i class="bi bi-upload mr-2"></i>
@@ -204,10 +206,10 @@
             <input type="file" 
                    id="resume" 
                    name="resume" 
-                   accept=".pdf,.doc,.docx"
+                   accept="application/pdf,.pdf"
                    style="display: none;">
             <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.5rem;">
-                Accepted formats: PDF, DOC, DOCX (Max: 5MB)
+                Accepted format: PDF only (Max: 10MB)
             </p>
         </div>
         
@@ -284,9 +286,14 @@
     document.getElementById('resume').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Validate file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File size must be less than 5MB');
+            if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Please select a PDF file.');
+                e.target.value = '';
+                return;
+            }
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('PDF size must be less than 10MB');
                 e.target.value = '';
                 return;
             }

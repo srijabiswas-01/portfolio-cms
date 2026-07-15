@@ -213,6 +213,9 @@ class Profile(TimestampedDocument):
     image_filename = StringField()
     image_content_type = StringField(default="image/jpeg")
     resume_path = StringField()
+    resume_data = BinaryField()
+    resume_filename = StringField()
+    resume_content_type = StringField(default="application/pdf")
 
     image = FileFieldDescriptor(
         "image_path",
@@ -222,12 +225,39 @@ class Profile(TimestampedDocument):
         content_type_field="image_content_type",
         database_url="/profile-image/",
     )
-    resume = FileFieldDescriptor("resume_path", "resumes")
+    resume = FileFieldDescriptor(
+        "resume_path",
+        "resumes",
+        binary_field="resume_data",
+        filename_field="resume_filename",
+        content_type_field="resume_content_type",
+        database_url="/resume/file/",
+    )
 
     meta = {"collection": "profile"}
 
     def __str__(self):
         return self.name
+
+
+class ResumeFile(TimestampedDocument):
+    name = StringField(max_length=255, required=True)
+    data = BinaryField(required=True)
+    content_type = StringField(default="application/pdf")
+    is_active = BooleanField(default=False)
+
+    meta = {"collection": "resume_files", "ordering": ["-created_at"]}
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            others = ResumeFile.objects
+            if self.id:
+                others = others.filter(id__ne=self.id)
+            others.update(set__is_active=False)
+        return super().save(*args, **kwargs)
 
 
 class Skill(TimestampedDocument):

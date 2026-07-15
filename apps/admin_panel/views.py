@@ -4,9 +4,10 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.utils.http import content_disposition_header
 from django.core.files.storage import default_storage
 
 from mongoengine.queryset.visitor import Q
@@ -18,7 +19,7 @@ from apps.public.models import (
     HomePage, AboutPage, ContactPage,
     Education, Experience, Interest, Achievement, CoreValue,
     ResearchCategory, ResearchEntry,
-    ContactSubmission, SkillCategory,
+    ContactSubmission, SkillCategory, ResumeFile,
 )
 # ============================================
 # DASHBOARD
@@ -410,16 +411,6 @@ def skill_category_delete(request, id):
 def skill_create(request):
     """Create new skill"""
     if request.method == 'POST':
-        if request.POST.get('remove_resume'):
-            if profile and profile.resume_path:
-                default_storage.delete(profile.resume_path)
-                profile.resume_path = None
-                profile.save()
-                messages.success(request, 'Resume removed successfully.')
-            else:
-                messages.warning(request, 'No resume to remove.')
-            return redirect('admin_profile_manager')
-
         name = request.POST.get('name')
         category_id = request.POST.get('category_id')
         proficiency = request.POST.get('proficiency', 50)
@@ -485,18 +476,19 @@ def skill_delete(request, id):
 def profile_manager(request):
     """Manage profile"""
     profile = Profile.objects.first()
+
+    # Move the former single resume into the multi-resume collection once.
+    if profile and profile.resume_data and ResumeFile.objects.count() == 0:
+        ResumeFile(
+            name=profile.resume_filename or 'resume.pdf',
+            data=profile.resume_data,
+            content_type='application/pdf',
+            is_active=True,
+        ).save()
+        profile.resume = None
+        profile.save()
     
     if request.method == 'POST':
-        if request.POST.get('remove_resume'):
-            if profile and profile.resume_path:
-                default_storage.delete(profile.resume_path)
-                profile.resume_path = None
-                profile.save()
-                messages.success(request, 'Resume removed successfully.')
-            else:
-                messages.warning(request, 'No resume to remove.')
-            return redirect('admin_profile_manager')
-
         name = request.POST.get('name')
         role = request.POST.get('role')
         bio = request.POST.get('bio')
@@ -506,6 +498,7 @@ def profile_manager(request):
         linkedin = request.POST.get('linkedin', '')
         twitter = request.POST.get('twitter', '')
         image = request.FILES.get('image')
+        resume = request.FILES.get('resume')
 
         if image:
             if not (image.content_type or '').startswith('image/'):
@@ -513,6 +506,20 @@ def profile_manager(request):
                 return redirect('admin_profile_manager')
             if image.size > 5 * 1024 * 1024:
                 messages.error(request, 'Profile image must be 5 MB or smaller.')
+                return redirect('admin_profile_manager')
+
+        if resume:
+            signature = resume.read(5)
+            resume.seek(0)
+            if (
+                resume.content_type != 'application/pdf'
+                or not resume.name.lower().endswith('.pdf')
+                or signature != b'%PDF-'
+            ):
+                messages.error(request, 'Resume must be uploaded as a PDF file.')
+                return redirect('admin_profile_manager')
+            if resume.size > 10 * 1024 * 1024:
+                messages.error(request, 'Resume PDF must be 10 MB or smaller.')
                 return redirect('admin_profile_manager')
         
         if profile:
@@ -530,13 +537,8 @@ def profile_manager(request):
                 if profile.image_path:
                     default_storage.delete(profile.image_path)
                 profile.image = image
-            if request.FILES.get('resume'):
-                if profile.resume_path:
-                    default_storage.delete(profile.resume_path)
-                profile.resume = request.FILES.get('resume')
             
             profile.save()
-            messages.success(request, 'Profile updated successfully!')
         else:
             # Create new profile
             profile = Profile(
@@ -551,17 +553,65 @@ def profile_manager(request):
             )
             if image:
                 profile.image = image
-            if request.FILES.get('resume'):
-                profile.resume = request.FILES.get('resume')
             profile.save()
-            messages.success(request, 'Profile created successfully!')
+
+        if resume:
+            ResumeFile(
+                name=resume.name,
+                data=resume.read(),
+                content_type='application/pdf',
+                is_active=ResumeFile.objects.count() == 0,
+            ).save()
+
+        messages.success(request, 'Profile updated successfully!')
         
         return redirect('admin_profile_manager')
     
     context = {
         'profile': profile,
+        'resumes': ResumeFile.objects.all(),
     }
     return render(request, 'admin/profile_manager.html', context)
+
+
+@login_required
+def resume_activate(request, id):
+    if request.method == 'POST':
+        resume = get_document_or_404(ResumeFile, id=id)
+        ResumeFile.objects.update(set__is_active=False)
+        resume.is_active = True
+        resume.save()
+        messages.success(request, f'"{resume.name}" is now the active resume.')
+    return redirect('admin_profile_manager')
+
+
+@login_required
+def resume_deactivate(request, id):
+    if request.method == 'POST':
+        resume = get_document_or_404(ResumeFile, id=id)
+        resume.is_active = False
+        resume.save()
+        messages.success(request, f'"{resume.name}" has been deactivated.')
+    return redirect('admin_profile_manager')
+
+
+@login_required
+def resume_delete(request, id):
+    if request.method == 'POST':
+        resume = get_document_or_404(ResumeFile, id=id)
+        name = resume.name
+        resume.delete()
+        messages.success(request, f'"{name}" was permanently deleted from MongoDB.')
+    return redirect('admin_profile_manager')
+
+
+@login_required
+def resume_admin_file(request, id):
+    resume = get_document_or_404(ResumeFile, id=id)
+    response = HttpResponse(bytes(resume.data), content_type='application/pdf')
+    response['Content-Disposition'] = content_disposition_header(False, resume.name)
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 @login_required
 def home_page_manager(request):
