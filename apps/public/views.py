@@ -401,15 +401,23 @@ def blog_detail(request, id):
     if blog.category and not blog.category.is_active:
         raise Http404("Blog category is inactive")
     
-    # Get related blogs (same tags or recent)
-    related_blogs = Blog.objects.filter(
-        status='published',
-        is_active=True
-    ).filter(id__ne=id).order_by('-published_date')[:3]
+    related_blogs = []
+    related_external_blogs = []
+    if blog.category:
+        related_blogs = Blog.objects.filter(
+            status='published',
+            is_active=True,
+            category=blog.category,
+        ).filter(id__ne=id).order_by('-published_date')[:3]
+        related_external_blogs = ExternalBlog.objects.filter(
+            is_active=True,
+            category=blog.category,
+        ).order_by('-published_date', '-created_at')[:3]
     
     context = {
         'blog': blog,
         'related_blogs': related_blogs,
+        'related_external_blogs': related_external_blogs,
     }
     return render(request, 'public/blog_detail.html', context)
 

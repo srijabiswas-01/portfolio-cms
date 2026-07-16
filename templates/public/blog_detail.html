@@ -99,10 +99,16 @@
             </div>
         </div>
 
-        <!-- Related Articles -->
-        {% if related_blogs %}
+        <!-- Category Articles -->
+        {% if related_blogs or related_external_blogs %}
         <div class="max-w-6xl mx-auto mt-20">
-            <h2 class="text-3xl font-bold font-poppins mb-8">Related Articles</h2>
+            <div class="category-related-heading">
+                <div>
+                    <span class="eyebrow">Keep exploring</span>
+                    <h2>More in {{ blog.category.name }}</h2>
+                </div>
+                <a href="{% url 'blogs' %}?category={{ blog.category.slug }}" class="category-related-all">View all <i class="bi bi-arrow-right"></i></a>
+            </div>
             <div class="grid md:grid-cols-3 gap-8">
                 {% for related in related_blogs %}
                 <article class="blog-card group">
@@ -128,6 +134,25 @@
                         <p class="text-secondary text-sm mb-4 line-clamp-2">{{ related.preview }}</p>
                         <a href="{% url 'blog_detail' related.id_str %}" class="text-accent-primary hover:text-accent-secondary font-medium">
                             Read More <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+                {% for related in related_external_blogs %}
+                <article class="blog-card group category-external-card">
+                    <a href="{{ related.url }}" target="_blank" rel="noopener noreferrer" class="category-related-cover">
+                        {% if related.image_url %}
+                        <img src="{{ related.image_url }}" alt="{{ related.title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% endif %}
+                        <span class="category-related-fallback" {% if related.image_url %}style="display:none"{% endif %}><i class="bi bi-journal-richtext"></i></span>
+                        <span class="external-platform-badge platform-{{ related.platform }}">{{ related.platform|title }}</span>
+                    </a>
+                    <div class="p-6">
+                        {% if related.published_date %}<div class="text-sm text-muted mb-3"><i class="bi bi-calendar3 mr-1"></i>{{ related.published_date }}</div>{% endif %}
+                        <h3 class="text-xl font-bold mb-2 line-clamp-2 group-hover:text-accent-primary transition-colors">{{ related.title }}</h3>
+                        {% if related.preview %}<p class="text-secondary text-sm mb-4 line-clamp-2">{{ related.preview }}</p>{% endif %}
+                        <a href="{{ related.url }}" target="_blank" rel="noopener noreferrer" class="text-accent-primary hover:text-accent-secondary font-medium">
+                            Read on {{ related.platform|title }} <i class="bi bi-box-arrow-up-right ml-1"></i>
                         </a>
                     </div>
                 </article>

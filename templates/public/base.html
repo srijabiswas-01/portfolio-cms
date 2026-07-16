@@ -31,8 +31,18 @@
     
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-primary text-primary font-inter">
+<body id="pageTop" class="bg-primary text-primary font-inter">
     <a href="#main-content" class="skip-link">Skip to content</a>
+    <div class="public-ambient" aria-hidden="true">
+        <span class="ambient-orb ambient-orb-one"></span>
+        <span class="ambient-orb ambient-orb-two"></span>
+        <span class="ambient-orb ambient-orb-three"></span>
+        <span class="ambient-ring"></span>
+    </div>
+    <div class="creative-cursor" aria-hidden="true">
+        <span class="creative-cursor-ring"></span>
+        <span class="creative-cursor-dot"></span>
+    </div>
     
     <!-- Navigation -->
     <nav id="site-nav" class="site-nav fixed w-full top-0 z-50 border-b border-color">
@@ -146,6 +156,10 @@
             </div>
         </div>
     </footer>
+
+    <a href="#pageTop" class="scroll-to-top is-visible" aria-label="Go to the top of this page" title="Go to top">
+        <i class="bi bi-arrow-up"></i>
+    </a>
     
     <script src="{% static 'js/main.js' %}" defer></script>
     

@@ -50,6 +50,60 @@
     window.addEventListener('scroll', updateNav, { passive: true });
     updateNav();
 
+    const supportsPointerEffects = window.matchMedia('(hover: hover) and (pointer: fine)').matches
+        && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (supportsPointerEffects) {
+        const cursor = document.querySelector('.creative-cursor');
+        if (cursor) {
+            document.body.classList.add('has-creative-cursor');
+            window.addEventListener('pointermove', (event) => {
+                cursor.style.setProperty('--cursor-x', `${event.clientX}px`);
+                cursor.style.setProperty('--cursor-y', `${event.clientY}px`);
+                cursor.classList.add('is-visible');
+            }, { passive: true });
+            document.addEventListener('pointerover', (event) => {
+                cursor.classList.toggle('is-interactive', Boolean(event.target.closest('a, button, [role="button"], input, textarea, select, summary')));
+            });
+            document.addEventListener('pointerdown', () => cursor.classList.add('is-pressed'));
+            document.addEventListener('pointerup', () => cursor.classList.remove('is-pressed'));
+            document.documentElement.addEventListener('mouseleave', () => cursor.classList.remove('is-visible'));
+            document.documentElement.addEventListener('mouseenter', () => cursor.classList.add('is-visible'));
+        }
+
+        let pointerFrame;
+        window.addEventListener('pointermove', (event) => {
+            if (pointerFrame) cancelAnimationFrame(pointerFrame);
+            pointerFrame = requestAnimationFrame(() => {
+                document.documentElement.style.setProperty('--pointer-x', `${event.clientX}px`);
+                document.documentElement.style.setProperty('--pointer-y', `${event.clientY}px`);
+            });
+        }, { passive: true });
+
+        const reactiveCards = document.querySelectorAll(
+            '.project-card, .blog-card, .skill-card, .certification-card, .stat-card, .interest-card, .value-card, .timeline-card'
+        );
+
+        reactiveCards.forEach((card) => {
+            card.classList.add('mouse-reactive');
+            card.addEventListener('pointermove', (event) => {
+                const rect = card.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const rotateX = ((y / rect.height) - 0.5) * -5;
+                const rotateY = ((x / rect.width) - 0.5) * 5;
+                card.style.setProperty('--card-x', `${x}px`);
+                card.style.setProperty('--card-y', `${y}px`);
+                card.style.setProperty('--card-rx', `${rotateX}deg`);
+                card.style.setProperty('--card-ry', `${rotateY}deg`);
+            }, { passive: true });
+            card.addEventListener('pointerleave', () => {
+                card.style.setProperty('--card-rx', '0deg');
+                card.style.setProperty('--card-ry', '0deg');
+            });
+        });
+    }
+
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         const revealElements = document.querySelectorAll('.reveal-on-scroll');
         const observer = new IntersectionObserver((entries) => {
