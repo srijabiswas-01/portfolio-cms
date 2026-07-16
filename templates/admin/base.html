@@ -104,6 +104,12 @@
                 <i class="bi bi-folder"></i>
                 <span>Projects</span>
             </a>
+
+            <!-- Certifications -->
+            <a href="{% url 'admin_certification_manager' %}" class="admin-sidebar-link {% if 'certification' in request.path %}active{% endif %}">
+                <i class="bi bi-patch-check"></i>
+                <span>Certifications</span>
+            </a>
             
             <!-- Skills -->
             <a href="{% url 'admin_skills_manager' %}" class="admin-sidebar-link {% if 'skill' in request.path %}active{% endif %}">

@@ -1,0 +1,82 @@
+{% extends 'admin/base.html' %}
+
+{% block page_title %}Manage Certifications{% endblock %}
+
+{% block content %}
+<div class="certification-admin-layout">
+    <section class="admin-card certification-form-card">
+        <div class="admin-section-heading">
+            <div>
+                <h2>{% if edit_certification %}Edit Certification{% else %}Add Certification{% endif %}</h2>
+                <p>Manage certificates displayed on your public portfolio.</p>
+            </div>
+            <i class="bi bi-patch-check"></i>
+        </div>
+
+        <form method="POST" action="{% if edit_certification %}{% url 'admin_certification_edit' edit_certification.id_str %}{% else %}{% url 'admin_certification_create' %}{% endif %}" class="certification-admin-form">
+            {% csrf_token %}
+            <div class="admin-form-group certification-name-field">
+                <label class="admin-form-label" for="certification_name">Certificate name *</label>
+                <input id="certification_name" name="name" class="admin-form-input" value="{{ edit_certification.name|default:'' }}" required maxlength="200">
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="certification_start">Start month *</label>
+                <input id="certification_start" name="start_month" type="month" class="admin-form-input" value="{{ edit_certification.start_month|default:'' }}" required>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label" for="certification_end">End month</label>
+                <input id="certification_end" name="end_month" type="month" class="admin-form-input" value="{{ edit_certification.end_month|default:'' }}">
+                <small class="admin-field-help">Leave empty if it does not expire.</small>
+            </div>
+            <div class="admin-form-group certification-details-field">
+                <label class="admin-form-label" for="certification_details">Details</label>
+                <textarea id="certification_details" name="details" class="admin-form-textarea" rows="4" placeholder="Skills covered, issuing organisation, credential details...">{{ edit_certification.details|default:'' }}</textarea>
+            </div>
+            <div class="admin-form-group certification-url-field">
+                <label class="admin-form-label" for="credential_url">Google Drive / credential link *</label>
+                <input id="credential_url" name="credential_url" type="url" class="admin-form-input" value="{{ edit_certification.credential_url|default:'' }}" placeholder="https://drive.google.com/..." required>
+            </div>
+            <label class="certification-active-check">
+                <input type="checkbox" name="is_active" {% if not edit_certification or edit_certification.is_active %}checked{% endif %}>
+                Show on public Certifications page
+            </label>
+            <div class="certification-form-actions">
+                {% if edit_certification %}<a href="{% url 'admin_certification_manager' %}" class="admin-btn-secondary">Cancel</a>{% endif %}
+                <button type="submit" class="admin-btn-primary"><i class="bi bi-check-lg"></i> {% if edit_certification %}Save Changes{% else %}Add Certification{% endif %}</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="admin-card">
+        <div class="admin-section-heading">
+            <div>
+                <h2>All Certifications</h2>
+                <p>{{ certifications|length }} certificate{{ certifications|length|pluralize }} added</p>
+            </div>
+        </div>
+        <div class="certification-admin-list">
+            {% for certification in certifications %}
+            <article class="certification-admin-item {% if certification.is_active %}is-active{% endif %}">
+                <div class="certification-admin-icon"><i class="bi bi-award"></i></div>
+                <div class="certification-admin-copy">
+                    <div class="certification-admin-title">
+                        <strong>{{ certification.name }}</strong>
+                        {% if certification.is_active %}<span class="admin-badge admin-badge-success">Active</span>{% else %}<span class="admin-badge admin-badge-warning">Inactive</span>{% endif %}
+                    </div>
+                    <span>{{ certification.start_month }} — {{ certification.end_month|default:"No expiry" }}</span>
+                    {% if certification.details %}<p>{{ certification.details|truncatewords:22 }}</p>{% endif %}
+                </div>
+                <div class="certification-admin-actions">
+                    <a href="{{ certification.credential_url }}" target="_blank" rel="noopener noreferrer" class="admin-btn-secondary" title="View credential"><i class="bi bi-box-arrow-up-right"></i></a>
+                    <a href="?edit={{ certification.id_str }}#certification_name" class="admin-btn-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
+                    <form method="POST" action="{% url 'admin_certification_toggle_active' certification.id_str %}">{% csrf_token %}<button class="admin-btn-secondary" title="Toggle visibility"><i class="bi bi-{% if certification.is_active %}toggle-on{% else %}toggle-off{% endif %}"></i></button></form>
+                    <form method="POST" action="{% url 'admin_certification_delete' certification.id_str %}" onsubmit="return confirm('Delete this certification?');">{% csrf_token %}<button class="admin-btn-danger" title="Delete"><i class="bi bi-trash"></i></button></form>
+                </div>
+            </article>
+            {% empty %}
+            <div class="certification-admin-empty"><i class="bi bi-award"></i><p>No certifications added yet.</p></div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

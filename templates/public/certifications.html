@@ -1,0 +1,38 @@
+{% extends 'public/base.html' %}
+
+{% block content %}
+<section class="page-hero section-shell py-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <span class="eyebrow">Verified learning</span>
+            <h1 class="text-5xl font-bold font-poppins mb-4">My <span class="text-accent-primary">Certifications</span></h1>
+            <div class="w-20 h-1 bg-accent-primary rounded-full mx-auto mb-6"></div>
+            <p class="text-xl text-secondary max-w-2xl mx-auto">Professional credentials, completed courses, and continuous learning milestones.</p>
+        </div>
+
+        {% if certifications %}
+        <div class="certification-grid reveal-on-scroll">
+            {% for certification in certifications %}
+            <article class="certification-card">
+                <div class="certification-card-icon"><i class="bi bi-patch-check-fill"></i></div>
+                <div class="certification-card-body">
+                    <span class="certification-date"><i class="bi bi-calendar3"></i> {{ certification.start_month }} — {{ certification.end_month|default:"No expiry" }}</span>
+                    <h2>{{ certification.name }}</h2>
+                    {% if certification.details %}<p>{{ certification.details|linebreaksbr }}</p>{% endif %}
+                    <a href="{{ certification.credential_url }}" target="_blank" rel="noopener noreferrer" class="btn-small-secondary certification-link">
+                        View Credential <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="certification-empty">
+            <i class="bi bi-award"></i>
+            <h2>Certifications coming soon</h2>
+            <p>New credentials will be added here.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

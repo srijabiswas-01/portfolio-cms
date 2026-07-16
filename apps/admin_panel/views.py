@@ -20,6 +20,7 @@ from apps.public.models import (
     Education, Experience, Interest, Achievement, CoreValue,
     ResearchCategory, ResearchEntry,
     ContactSubmission, SkillCategory, ResumeFile, ExternalBlog, BlogCategory,
+    Certification,
 )
 # ============================================
 # DASHBOARD
@@ -452,6 +453,73 @@ def project_delete(request, id):
         return redirect('admin_project_manager')
     
     return redirect('admin_project_manager')
+
+
+# ============================================
+# CERTIFICATION MANAGEMENT
+# ============================================
+
+@login_required
+def certification_manager(request):
+    certifications = Certification.objects.all().order_by('-start_month', 'name')
+    edit_certification = None
+    edit_id = request.GET.get('edit', '').strip()
+    if edit_id:
+        edit_certification = get_document_or_404(Certification, id=edit_id)
+    return render(request, 'admin/certification_manager.html', {
+        'certifications': certifications,
+        'edit_certification': edit_certification,
+    })
+
+
+@login_required
+def certification_create(request):
+    if request.method == 'POST':
+        Certification(
+            name=request.POST.get('name', '').strip(),
+            details=request.POST.get('details', '').strip(),
+            start_month=request.POST.get('start_month', '').strip(),
+            end_month=request.POST.get('end_month', '').strip(),
+            credential_url=request.POST.get('credential_url', '').strip(),
+            is_active=request.POST.get('is_active') == 'on',
+        ).save()
+        messages.success(request, 'Certification added successfully.')
+    return redirect('admin_certification_manager')
+
+
+@login_required
+def certification_edit(request, id):
+    certification = get_document_or_404(Certification, id=id)
+    if request.method == 'POST':
+        certification.name = request.POST.get('name', '').strip()
+        certification.details = request.POST.get('details', '').strip()
+        certification.start_month = request.POST.get('start_month', '').strip()
+        certification.end_month = request.POST.get('end_month', '').strip()
+        certification.credential_url = request.POST.get('credential_url', '').strip()
+        certification.is_active = request.POST.get('is_active') == 'on'
+        certification.save()
+        messages.success(request, f'Certification "{certification.name}" updated successfully.')
+    return redirect('admin_certification_manager')
+
+
+@login_required
+def certification_toggle_active(request, id):
+    if request.method == 'POST':
+        certification = get_document_or_404(Certification, id=id)
+        certification.is_active = not certification.is_active
+        certification.save()
+        messages.success(request, f'Certification "{certification.name}" visibility updated.')
+    return redirect('admin_certification_manager')
+
+
+@login_required
+def certification_delete(request, id):
+    if request.method == 'POST':
+        certification = get_document_or_404(Certification, id=id)
+        name = certification.name
+        certification.delete()
+        messages.success(request, f'Certification "{name}" deleted.')
+    return redirect('admin_certification_manager')
 
 
 # ============================================

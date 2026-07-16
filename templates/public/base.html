@@ -50,6 +50,7 @@
                     <a href="{% url 'about' %}" class="nav-link {% if 'about' in request.path %}active{% endif %}">About</a>
                     <a href="{% url 'skills' %}" class="nav-link {% if 'skills' in request.path %}active{% endif %}">Skills</a>
                     <a href="{% url 'projects' %}" class="nav-link {% if 'projects' in request.path %}active{% endif %}">Projects</a>
+                    <a href="{% url 'certifications' %}" class="nav-link {% if 'certifications' in request.path %}active{% endif %}">Certifications</a>
                     {% if active_resume %}<a href="{% url 'resume' %}" class="nav-link {% if 'resume' in request.path %}active{% endif %}">Resume</a>{% endif %}
                     <a href="{% url 'blogs' %}" class="nav-link {% if 'blog' in request.path %}active{% endif %}">Blog</a>
                     <a href="{% url 'contact' %}" class="nav-link {% if 'contact' in request.path %}active{% endif %}">Contact</a>
@@ -78,6 +79,7 @@
                     <a href="{% url 'about' %}" class="mobile-nav-link">About</a>
                     <a href="{% url 'skills' %}" class="mobile-nav-link">Skills</a>
                     <a href="{% url 'projects' %}" class="mobile-nav-link">Projects</a>
+                    <a href="{% url 'certifications' %}" class="mobile-nav-link">Certifications</a>
                     {% if active_resume %}<a href="{% url 'resume' %}" class="mobile-nav-link">Resume</a>{% endif %}
                     <a href="{% url 'blogs' %}" class="mobile-nav-link">Blog</a>
                     <a href="{% url 'contact' %}" class="mobile-nav-link">Contact</a>
@@ -108,6 +110,7 @@
                     <h3 class="text-lg font-semibold font-poppins mb-4">Quick Links</h3>
                     <ul class="space-y-2 text-sm">
                         <li><a href="{% url 'projects' %}" class="footer-link text-secondary">Projects</a></li>
+                        <li><a href="{% url 'certifications' %}" class="footer-link text-secondary">Certifications</a></li>
                         <li><a href="{% url 'blogs' %}" class="footer-link text-secondary">Blog</a></li>
                         <li><a href="{% url 'skills' %}" class="footer-link text-secondary">Skills</a></li>
                         {% if active_resume %}<li><a href="{% url 'resume' %}" class="footer-link text-secondary">Resume</a></li>{% endif %}

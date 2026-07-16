@@ -20,6 +20,7 @@ from .models import (
     BlogCategory,
     ContactPage,
     ContactSubmission,
+    Certification,
     CoreValue,
     Education,
     Experience,
@@ -298,6 +299,12 @@ def projects(request):
         'search_query': search_query,
     }
     return render(request, 'public/projects.html', context)
+
+
+def certifications(request):
+    """Public list of active certifications."""
+    certification_list = Certification.objects.filter(is_active=True).order_by('-start_month', 'name')
+    return render(request, 'public/certifications.html', {'certifications': certification_list})
 
 
 def project_detail(request, id):

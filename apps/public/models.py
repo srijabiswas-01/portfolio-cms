@@ -377,6 +377,20 @@ class Blog(TimestampedDocument):
     def __str__(self):
         return self.title
 
+
+class Certification(TimestampedDocument):
+    name = StringField(max_length=200, required=True)
+    details = StringField(default="")
+    start_month = StringField(max_length=7, required=True)
+    end_month = StringField(max_length=7, default="")
+    credential_url = StringField(required=True)
+    is_active = BooleanField(default=True)
+
+    meta = {"collection": "certifications", "ordering": ["-start_month", "name"]}
+
+    def __str__(self):
+        return self.name
+
     @property
     def category_name(self):
         return self.category.name if self.category else "Uncategorized"

@@ -100,6 +100,13 @@ urlpatterns = [
     path('projects/new/', views.project_form, name='admin_project_form'),
     path('projects/<str:id>/edit/', views.project_edit, name='admin_project_edit'),
     path('projects/<str:id>/delete/', views.project_delete, name='admin_project_delete'),
+
+    # Certification Management
+    path('certifications/', views.certification_manager, name='admin_certification_manager'),
+    path('certifications/create/', views.certification_create, name='admin_certification_create'),
+    path('certifications/<str:id>/edit/', views.certification_edit, name='admin_certification_edit'),
+    path('certifications/<str:id>/toggle-active/', views.certification_toggle_active, name='admin_certification_toggle_active'),
+    path('certifications/<str:id>/delete/', views.certification_delete, name='admin_certification_delete'),
     
     # Skills Management
     path('skills/', views.skills_manager, name='admin_skills_manager'),
