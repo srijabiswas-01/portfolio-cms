@@ -1316,3 +1316,37 @@ input[type="checkbox"] { accent-color: var(--admin-accent-primary); }
   .certification-admin-item { grid-template-columns: auto minmax(0,1fr); gap: .75rem; }
   .certification-admin-actions { justify-content: flex-start; }
 }
+
+/* Skills manager */
+.skills-admin-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; }
+.skills-admin-eyebrow { display: inline-block; margin-bottom: .35rem; color: var(--admin-accent-primary); font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.skills-admin-heading h2 { margin: 0 0 .25rem; color: var(--admin-text-primary); font: 600 1.5rem 'Poppins', sans-serif; }
+.skills-admin-heading p { margin: 0; color: var(--admin-text-muted); font-size: .86rem; }
+.skills-admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr)); gap: 1.25rem; }
+.skill-admin-card { display: flex; flex-direction: column; min-height: 270px; padding: 1.35rem; }
+.skill-admin-card.is-inactive { opacity: .72; }
+.skill-admin-topline { display: flex; align-items: flex-start; justify-content: space-between; gap: .85rem; }
+.skill-admin-identity { display: flex; align-items: center; min-width: 0; gap: .8rem; }
+.skill-admin-icon { display: grid; place-items: center; flex: 0 0 auto; width: 2.8rem; height: 2.8rem; border: 1px solid rgba(34,193,220,.22); border-radius: .75rem; color: var(--admin-accent-primary); background: rgba(34,193,220,.08); font-size: 1.3rem; transition: transform .25s ease, background .25s ease; }
+.skill-admin-card:hover .skill-admin-icon { transform: rotate(-4deg) scale(1.06); background: rgba(34,193,220,.14); }
+.skill-admin-copy { min-width: 0; }
+.skill-admin-copy h3 { margin: 0; overflow-wrap: anywhere; color: var(--admin-text-primary); font: 600 1rem/1.35 'Poppins', sans-serif; }
+.skill-admin-copy p { margin: .3rem 0 0; color: var(--admin-text-muted); font-size: .78rem; }
+.skill-admin-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; margin: 1.2rem 0; padding: .8rem 0; border-top: 1px solid var(--admin-border-color); border-bottom: 1px solid var(--admin-border-color); }
+.skill-admin-actions form { display: contents; margin: 0; }
+.skill-admin-actions button { width: 100%; min-height: 2.35rem; padding: .45rem .55rem; gap: .35rem; font-size: .72rem; }
+.skill-admin-proficiency { margin-top: auto; }
+.skill-admin-proficiency-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+.skill-admin-proficiency-label span { color: var(--admin-text-muted); font-size: .74rem; }
+.skill-admin-proficiency-label strong { color: var(--admin-accent-primary); font-size: 1rem; }
+.skill-admin-progress { height: .55rem; overflow: hidden; border: 1px solid rgba(148,163,184,.08); border-radius: 999px; background: rgba(8,14,28,.65); }
+.skill-admin-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--admin-accent-primary), #7c6cf2); box-shadow: 0 0 14px rgba(34,193,220,.28); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+@media (max-width: 640px) {
+  .skills-admin-heading { align-items: stretch; flex-direction: column; }
+  .skills-admin-heading .admin-btn-primary { width: 100%; }
+  .skill-admin-card { min-height: 0; }
+}
+@media (max-width: 400px) {
+  .skill-admin-actions { grid-template-columns: 1fr; }
+  .skill-admin-actions form { display: block; }
+}

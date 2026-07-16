@@ -6,14 +6,11 @@
 
 {% block content %}
 <!-- Header Actions -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+<div class="skills-admin-heading">
     <div>
-        <h2 style="font-size: 1.5rem; font-weight: 600; font-family: 'Poppins', sans-serif; color: var(--admin-text-primary); margin-bottom: 0.5rem;">
-            All Skills
-        </h2>
-        <p style="color: var(--admin-text-muted); font-size: 0.875rem;">
-            Manage your technical skills and expertise
-        </p>
+        <span class="skills-admin-eyebrow">Expertise library</span>
+        <h2>All Skills</h2>
+        <p>Manage your technical skills and expertise</p>
     </div>
     <button onclick="openAddModal()" class="admin-btn-primary">
         <i class="bi bi-plus-lg mr-2"></i>
@@ -23,60 +20,49 @@
 
 <!-- Skills Grid -->
 {% if skills %}
-<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+<div class="skills-admin-grid">
     {% for skill in skills %}
-    <div class="admin-card">
-        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
-            <div style="flex: 1;">
-                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                    {% if skill.icon %}
-                    <i class="bi bi-{{ skill.icon }}" style="font-size: 1.5rem; color: var(--admin-accent-primary);"></i>
-                    {% endif %}
-                    <div>
-                        <h3 style="font-weight: 600; color: var(--admin-text-primary);">{{ skill.name }}</h3>
-                        {% if skill.is_active %}
-                        <span class="admin-badge admin-badge-success" style="margin-top: 0.25rem;">Active</span>
-                        {% else %}
-                        <span class="admin-badge admin-badge-warning" style="margin-top: 0.25rem;">Inactive</span>
-                        {% endif %}
-                    </div>
+    <article class="admin-card skill-admin-card {% if not skill.is_active %}is-inactive{% endif %}">
+        <div class="skill-admin-topline">
+            <div class="skill-admin-identity">
+                <div class="skill-admin-icon"><i class="bi bi-{{ skill.icon|default:'star' }}"></i></div>
+                <div class="skill-admin-copy">
+                    <h3>{{ skill.name }}</h3>
+                    <p>{{ skill.category_name }}</p>
                 </div>
-                <p style="font-size: 0.875rem; color: var(--admin-text-muted);">{{ skill.category_name }}</p>
             </div>
-            
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            {% if skill.is_active %}<span class="admin-badge admin-badge-success">Active</span>{% else %}<span class="admin-badge admin-badge-warning">Inactive</span>{% endif %}
+        </div>
+
+        <div class="skill-admin-actions">
                 <button onclick="editSkill('{{ skill.id_str }}', '{{ skill.name|escapejs }}', '{{ skill.category.id_str|default:'' }}', {{ skill.proficiency }}, '{{ skill.icon }}', {{ skill.is_active|yesno:'true,false' }})" 
-                        class="admin-btn-secondary" 
-                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
-                    <i class="bi bi-pencil"></i>
+                        class="admin-btn-secondary" title="Edit {{ skill.name }}">
+                    <i class="bi bi-pencil"></i><span>Edit</span>
                 </button>
                 <button onclick="deleteSkill('{{ skill.id_str }}', '{{ skill.name|escapejs }}')" 
-                        class="admin-btn-danger" 
-                        style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
-                    <i class="bi bi-trash"></i>
+                        class="admin-btn-danger" title="Delete {{ skill.name }}">
+                    <i class="bi bi-trash"></i><span>Delete</span>
                 </button>
-                <form method="POST" action="{% url 'admin_skill_toggle_active' skill.id_str %}" style="display: inline;">
+                <form method="POST" action="{% url 'admin_skill_toggle_active' skill.id_str %}">
                     {% csrf_token %}
-                    <button type="submit"
-                            class="admin-btn-secondary"
-                            style="padding: 0.35rem 0.6rem; font-size: 0.75rem;">
-                        {% if skill.is_active %}Deactivate{% else %}Activate{% endif %}
+                    <button type="submit" class="admin-btn-secondary" title="Change visibility">
+                        <i class="bi bi-{% if skill.is_active %}toggle-on{% else %}toggle-off{% endif %}"></i>
+                        <span>{% if skill.is_active %}Deactivate{% else %}Activate{% endif %}</span>
                     </button>
                 </form>
-            </div>
         </div>
         
         <!-- Proficiency Bar -->
-        <div style="margin-bottom: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 0.75rem; color: var(--admin-text-muted);">Proficiency</span>
-                <span style="font-weight: 600; color: var(--admin-accent-primary);">{{ skill.proficiency }}%</span>
+        <div class="skill-admin-proficiency">
+            <div class="skill-admin-proficiency-label">
+                <span>Proficiency</span>
+                <strong>{{ skill.proficiency }}%</strong>
             </div>
-            <div style="height: 8px; background: var(--admin-bg-secondary); border-radius: 999px; overflow: hidden;">
-                <div style="height: 100%; background: linear-gradient(to right, var(--admin-accent-primary), var(--admin-accent-secondary)); width: {{ skill.proficiency }}%; transition: width 0.3s ease;"></div>
+            <div class="skill-admin-progress" role="progressbar" aria-valuenow="{{ skill.proficiency }}" aria-valuemin="0" aria-valuemax="100">
+                <span style="width: {{ skill.proficiency }}%"></span>
             </div>
         </div>
-    </div>
+    </article>
     {% endfor %}
 </div>
 {% else %}
