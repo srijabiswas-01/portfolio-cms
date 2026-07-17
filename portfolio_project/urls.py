@@ -13,6 +13,7 @@ urlpatterns = [
     path("", include("apps.public.urls")),
     path("admin/", include("apps.admin_panel.urls")),
     path("accounts/", include("apps.accounts.urls")),
+    path("assistant/", include("apps.assistant.urls")),
 ]
 
 # Serve media files in development only

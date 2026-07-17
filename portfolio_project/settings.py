@@ -36,6 +36,9 @@ def _clean_bool_env(name: str) -> None:
 _clean_bool_env("DEBUG")
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", default=False, cast=bool)
+GROQ_API_KEY = config("GROQ_API_KEY", default="")
+AI_MODEL = config("AI_MODEL", default="llama-3.3-70b-versatile")
+AI_ASSISTANT_ENABLED = config("AI_ASSISTANT_ENABLED", default=True, cast=bool)
 
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS",
@@ -121,6 +124,7 @@ INSTALLED_APPS = [
     "apps.public.apps.PublicConfig",
     "apps.admin_panel.apps.AdminPanelConfig",
     "apps.accounts.apps.AccountsConfig",
+    "apps.assistant.apps.AssistantConfig",
 ]
 
 MIDDLEWARE = [

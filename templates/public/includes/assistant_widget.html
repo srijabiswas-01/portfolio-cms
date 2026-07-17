@@ -1,0 +1,42 @@
+<div class="portfolio-assistant" id="portfolioAssistant" data-chat-url="{% url 'assistant_chat' %}" data-clear-url="{% url 'assistant_clear' %}">
+    <button type="button" class="assistant-launcher" id="assistantLauncher" aria-label="Open Srija's AI assistant" aria-expanded="false" aria-controls="assistantPanel">
+        <span class="assistant-launcher-pulse"></span>
+        <i class="bi bi-stars"></i>
+        <span>Ask AI</span>
+    </button>
+
+    <section class="assistant-panel" id="assistantPanel" aria-label="Srija's AI Portfolio Assistant" aria-hidden="true">
+        <header class="assistant-header">
+            <div class="assistant-avatar"><i class="bi bi-stars"></i></div>
+            <div>
+                <h2>Srija AI</h2>
+                <p><span></span> Portfolio assistant</p>
+            </div>
+            <button type="button" class="assistant-icon-button" id="assistantClear" aria-label="Clear conversation" title="Clear conversation"><i class="bi bi-arrow-counterclockwise"></i></button>
+            <button type="button" class="assistant-icon-button" id="assistantClose" aria-label="Close assistant"><i class="bi bi-x-lg"></i></button>
+        </header>
+
+        <div class="assistant-messages" id="assistantMessages" aria-live="polite">
+            <div class="assistant-message assistant-message-bot">
+                <div class="assistant-message-icon"><i class="bi bi-stars"></i></div>
+                <div class="assistant-message-content">
+                    <p>Hi! I can answer questions about Srija's skills, projects, experience, certifications, blogs, research, and contact details.</p>
+                </div>
+            </div>
+            <div class="assistant-suggestions" id="assistantSuggestions">
+                <button type="button" data-question="Tell me about Srija">About Srija</button>
+                <button type="button" data-question="What are Srija's strongest skills?">Top skills</button>
+                <button type="button" data-question="Show me Srija's AI projects">AI projects</button>
+                <button type="button" data-question="How can I contact Srija?">Contact</button>
+            </div>
+        </div>
+
+        <form class="assistant-form" id="assistantForm">
+            {% csrf_token %}
+            <label class="sr-only" for="assistantInput">Ask about Srija's portfolio</label>
+            <textarea id="assistantInput" name="question" rows="1" maxlength="500" placeholder="Ask about skills, projects, experience..." required></textarea>
+            <button type="submit" id="assistantSend" aria-label="Send question"><i class="bi bi-send-fill"></i></button>
+        </form>
+        <p class="assistant-disclaimer">AI answers are grounded in the public portfolio.</p>
+    </section>
+</div>
