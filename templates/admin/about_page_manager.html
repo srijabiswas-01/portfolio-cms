@@ -550,6 +550,7 @@
                         <th>Degree</th>
                         <th>Institution</th>
                         <th>Year</th>
+                        <th>Result</th>
                         <th>Status</th>
                         <th style="text-align: right;">Actions</th>
                     </tr>
@@ -562,8 +563,25 @@
                             <strong>{{ edu.degree }}</strong>
                             <p style="font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.25rem;">{{ edu.description|truncatewords:15 }}</p>
                         </td>
-                        <td>{{ edu.institution }}</td>
+                        <td>
+                            {{ edu.institution }}
+                            {% if edu.link %}
+                            <div style="margin-top: 0.25rem;">
+                                <a href="{{ edu.link }}" target="_blank" rel="noopener noreferrer"
+                                   style="font-size: 0.75rem; color: var(--admin-accent-primary);">
+                                    <i class="bi bi-link-45deg"></i> Open link
+                                </a>
+                            </div>
+                            {% endif %}
+                        </td>
                         <td>{{ edu.year }}</td>
+                        <td>
+                            {% if edu.grade %}
+                                {{ edu.grade }}{% if edu.grade_format == "Percentage" %}%{% else %} CGPA{% endif %}
+                            {% else %}
+                                <span style="color: var(--admin-text-muted);">—</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if edu.is_active %}
                             <span class="admin-badge admin-badge-success">Active</span>
@@ -573,7 +591,7 @@
                         </td>
                         <td>
                             <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                                <button onclick="editEducation('{{ edu.id_str }}', '{{ edu.degree|escapejs }}', '{{ edu.institution|escapejs }}', '{{ edu.year }}', '{{ edu.description|escapejs }}', {{ edu.order }})" 
+                                <button onclick="editEducation('{{ edu.id_str }}', '{{ edu.degree|escapejs }}', '{{ edu.institution|escapejs }}', '{{ edu.year|escapejs }}', '{{ edu.description|escapejs }}', '{{ edu.link|default_if_none:""|escapejs }}', '{{ edu.grade|default_if_none:""|escapejs }}', '{{ edu.grade_format|default:"CGPA"|escapejs }}', {{ edu.order }})"
                                         class="admin-btn-secondary" 
                                         style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                                     <i class="bi bi-pencil"></i>
@@ -745,6 +763,29 @@
             <div class="admin-form-group">
                 <label class="admin-form-label">Year</label>
                 <input type="text" name="year" id="edu_year" class="admin-form-input" placeholder="2023 - 2025" required>
+            </div>
+
+            <div class="admin-form-group">
+                <label class="admin-form-label">Link</label>
+                <input type="url" name="link" id="edu_link" class="admin-form-input"
+                       placeholder="https://institution.example/">
+                <small style="color: var(--admin-text-muted);">Optional institution, course, or credential link.</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Result Format</label>
+                    <select name="grade_format" id="edu_grade_format" class="admin-form-input">
+                        <option value="CGPA">CGPA</option>
+                        <option value="Percentage">Percentage</option>
+                    </select>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">CGPA / Percentage</label>
+                    <input type="number" name="grade" id="edu_grade" class="admin-form-input"
+                           min="0" max="10" step="0.01" placeholder="e.g. 8.75">
+                </div>
             </div>
             
             <div class="admin-form-group">
@@ -1132,20 +1173,35 @@
     function openEducationModal() {
         document.getElementById('educationModalTitle').textContent = 'Add Education Entry';
         document.getElementById('educationForm').reset();
+        updateEducationGradeInput();
         document.getElementById('educationForm').action = '{% url "admin_education_create" %}';
         document.getElementById('educationModal').style.display = 'flex';
     }
     
-    function editEducation(id, degree, institution, year, description, order) {
+    function editEducation(id, degree, institution, year, description, link, grade, gradeFormat, order) {
         document.getElementById('educationModalTitle').textContent = 'Edit Education Entry';
         document.getElementById('edu_degree').value = degree;
         document.getElementById('edu_institution').value = institution;
         document.getElementById('edu_year').value = year;
         document.getElementById('edu_description').value = description;
+        document.getElementById('edu_link').value = link;
+        document.getElementById('edu_grade').value = grade;
+        document.getElementById('edu_grade_format').value = gradeFormat || 'CGPA';
+        updateEducationGradeInput();
         document.getElementById('edu_order').value = order;
         document.getElementById('educationForm').action = `/admin/pages/about/education/${id}/edit/`;
         document.getElementById('educationModal').style.display = 'flex';
     }
+
+    function updateEducationGradeInput() {
+        const format = document.getElementById('edu_grade_format').value;
+        const input = document.getElementById('edu_grade');
+        const isPercentage = format === 'Percentage';
+        input.max = isPercentage ? '100' : '10';
+        input.placeholder = isPercentage ? 'e.g. 85.5' : 'e.g. 8.75';
+    }
+
+    document.getElementById('edu_grade_format').addEventListener('change', updateEducationGradeInput);
     
     function closeEducationModal() {
         document.getElementById('educationModal').style.display = 'none';

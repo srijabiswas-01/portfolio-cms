@@ -117,6 +117,8 @@ def collect_public_knowledge():
     for education in Education.objects.filter(is_active=True):
         _add(items, "education", education.id, education.degree, _parts(
             education.degree, education.institution, education.year, education.description,
+            f"{education.grade_format}: {education.grade}" if education.grade else "",
+            education.link,
         ), "/about/", chunk=False)
 
     for experience in Experience.objects.filter(is_active=True):

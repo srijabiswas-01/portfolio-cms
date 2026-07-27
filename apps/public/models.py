@@ -501,6 +501,13 @@ class Education(TimestampedDocument):
     institution = StringField(max_length=200, required=True)
     year = StringField(max_length=50)
     description = StringField()
+    link = StringField(max_length=500, default="")
+    grade = StringField(max_length=20, default="")
+    grade_format = StringField(
+        max_length=20,
+        choices=("CGPA", "Percentage"),
+        default="CGPA",
+    )
     order = IntField(default=0)
     is_active = BooleanField(default=True)
 

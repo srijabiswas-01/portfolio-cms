@@ -3,7 +3,9 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.core.validators import URLValidator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -951,14 +953,54 @@ def about_page_manager(request):
 
 
 # Education CRUD
+def _education_result_from_post(request):
+    grade = request.POST.get('grade', '').strip()
+    grade_format = request.POST.get('grade_format', 'CGPA').strip()
+    link = request.POST.get('link', '').strip()
+
+    if grade_format not in {'CGPA', 'Percentage'}:
+        raise ValueError('Select either CGPA or Percentage as the result format.')
+
+    if grade:
+        try:
+            numeric_grade = float(grade)
+        except ValueError as exc:
+            raise ValueError('The academic result must be a number.') from exc
+
+        maximum = 10 if grade_format == 'CGPA' else 100
+        if numeric_grade < 0 or numeric_grade > maximum:
+            raise ValueError(
+                f'{grade_format} must be between 0 and {maximum}.'
+            )
+
+    if link:
+        try:
+            URLValidator(schemes=['http', 'https'])(link)
+        except ValidationError as exc:
+            raise ValueError(
+                'Enter a valid link beginning with http:// or https://.'
+            ) from exc
+
+    return grade, grade_format, link
+
+
 @login_required
 def education_create(request):
     if request.method == 'POST':
+        try:
+            grade, grade_format, link = _education_result_from_post(request)
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect('admin_about_page_manager')
+
         education = Education(
-            degree=request.POST.get('degree'),
-            institution=request.POST.get('institution'),
-            year=request.POST.get('year'),
-            description=request.POST.get('description'),
+            degree=request.POST.get('degree', '').strip(),
+            institution=request.POST.get('institution', '').strip(),
+            year=request.POST.get('year', '').strip(),
+            description=request.POST.get('description', '').strip(),
+            link=link,
+            grade=grade,
+            grade_format=grade_format,
             order=request.POST.get('order', 0)
         )
         education.save()
@@ -971,10 +1013,19 @@ def education_create(request):
 def education_edit(request, id):
     education = get_document_or_404(Education, id=id)
     if request.method == 'POST':
-        education.degree = request.POST.get('degree')
-        education.institution = request.POST.get('institution')
-        education.year = request.POST.get('year')
-        education.description = request.POST.get('description')
+        try:
+            grade, grade_format, link = _education_result_from_post(request)
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect('admin_about_page_manager')
+
+        education.degree = request.POST.get('degree', '').strip()
+        education.institution = request.POST.get('institution', '').strip()
+        education.year = request.POST.get('year', '').strip()
+        education.description = request.POST.get('description', '').strip()
+        education.link = link
+        education.grade = grade
+        education.grade_format = grade_format
         education.order = request.POST.get('order', 0)
         education.save()
         messages.success(request, 'Education entry updated!')

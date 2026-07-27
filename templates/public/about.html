@@ -176,6 +176,25 @@
                             </div>
                             <span class="text-sm text-muted">{{ edu.year }}</span>
                         </div>
+                        {% if edu.grade or edu.link %}
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            {% if edu.grade %}
+                            <span class="inline-flex items-center rounded-full bg-accent-primary/10 px-3 py-1 text-sm font-semibold text-accent-primary">
+                                {% if edu.grade_format == "Percentage" %}
+                                    {{ edu.grade }}%
+                                {% else %}
+                                    {{ edu.grade }} CGPA
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                            {% if edu.link %}
+                            <a href="{{ edu.link }}" target="_blank" rel="noopener noreferrer"
+                               class="inline-flex items-center gap-1 text-sm font-semibold text-accent-primary hover:underline">
+                                View details <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                         <p class="text-secondary text-sm">{{ edu.description }}</p>
                     </div>
                 </div>
