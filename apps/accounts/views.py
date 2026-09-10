@@ -4,7 +4,18 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_GET
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
 
+
+@never_cache
+@require_GET
+def login_csrf_token(request):
+    return JsonResponse({"csrfToken": get_token(request)})
+
+@never_cache
 def admin_login(request):
     """Admin login view"""
     if request.user.is_authenticated:

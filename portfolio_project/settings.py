@@ -92,6 +92,14 @@ if not SKIP_MONGO_CONNECT and MONGODB_URI and DATABASE_NAME:
 # --------------------------------------------------
 # Security settings (CORRECT way)
 # --------------------------------------------------
+# Cookies are shared across ports, so isolate this app from other local projects.
+CSRF_COOKIE_NAME = "portfolio_csrftoken"
+SESSION_COOKIE_NAME = "portfolio_sessionid"
+
+# Quill embeds inline images in the content field, rather than as file uploads.
+# Keep this bounded: blog content and the 5 MB cover share one MongoDB document.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
+
 if DEBUG:
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False

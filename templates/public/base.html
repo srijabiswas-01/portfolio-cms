@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/base-public.css' %}?v=20260727-research-2">
+    <link rel="stylesheet" href="{% static 'css/base-public.css' %}?v=20260910-orbit-2">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -164,7 +164,9 @@
     {% include 'public/includes/assistant_widget.html' %}
     
     <script src="{% static 'js/main.js' %}?v=20260717-assistant-2" defer></script>
-    <script src="{% static 'js/assistant.js' %}?v=20260717-assistant-2" defer></script>
+    <script src="{% static 'js/marked.min.js' %}?v=15.0.12" defer></script>
+    <script src="{% static 'js/purify.min.js' %}?v=3.4.15" defer></script>
+    <script src="{% static 'js/assistant.js' %}?v=20260910-orbit-2" defer></script>
     
     {% block extra_js %}{% endblock %}
 </body>

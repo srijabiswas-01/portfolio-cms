@@ -248,6 +248,17 @@
         // Get Quill content
         var content = quill.root.innerHTML;
         document.getElementById('content').value = content;
+
+        // Leave space for multipart field headers within the server's 8 MB limit.
+        let textBytes = 0;
+        for (const value of new FormData(this).values()) {
+            if (typeof value === 'string') textBytes += new Blob([value]).size;
+        }
+        if (textBytes > 8 * 1024 * 1024 - 64 * 1024) {
+            e.preventDefault();
+            alert('This post is too large to save. Resize or remove some images inside the editor and try again. Your changes are still in the editor.');
+            return;
+        }
         
         // Validate content
         if (quill.getText().trim().length === 0) {

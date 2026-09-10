@@ -40,13 +40,35 @@
         icon.innerHTML = `<i class="bi bi-${role === 'user' ? 'person' : 'stars'}"></i>`;
         const content = document.createElement('div');
         content.className = 'assistant-message-content';
-        const paragraph = document.createElement('p');
-        paragraph.textContent = text;
-        content.appendChild(paragraph);
+        if (role === 'bot' && window.marked && window.DOMPurify) {
+            content.innerHTML = window.DOMPurify.sanitize(window.marked.parse(text, { breaks: true }), {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'code', 'a', 'hr'],
+                ALLOWED_ATTR: ['href', 'title', 'start'],
+            });
+            content.classList.add('assistant-formatted');
+            const firstBlock = content.firstElementChild;
+            if (firstBlock && (firstBlock.matches('h1, h2, h3') ||
+                (firstBlock.matches('p') && firstBlock.textContent.length <= 100 && firstBlock.nextElementSibling?.matches('ul, ol')))) {
+                firstBlock.classList.add('assistant-answer-title');
+            }
+            content.querySelectorAll('a').forEach((link) => {
+                if (!/^(https?:\/\/|mailto:|\/(?!\/)|#)/i.test(link.getAttribute('href') || '')) {
+                    link.removeAttribute('href');
+                } else {
+                    link.rel = 'noopener noreferrer';
+                    if (/^https?:\/\//i.test(link.href)) link.target = '_blank';
+                }
+            });
+        } else {
+            const paragraph = document.createElement('p');
+            paragraph.textContent = text;
+            content.appendChild(paragraph);
+        }
         if (sources.length) {
             const sourceList = document.createElement('div');
             sourceList.className = 'assistant-sources';
             sources.forEach((source) => {
+                if (!/^(https?:\/\/|\/(?!\/))/i.test(source.url || '')) return;
                 const link = document.createElement('a');
                 link.href = source.url;
                 link.textContent = source.title;
@@ -58,7 +80,14 @@
         }
         item.append(icon, content);
         messages.appendChild(item);
-        scrollMessages();
+        if (role === 'bot') {
+            messages.scrollTo({
+                top: messages.scrollTop + item.getBoundingClientRect().top - messages.getBoundingClientRect().top - 16,
+                behavior: 'smooth',
+            });
+        } else {
+            scrollMessages();
+        }
         return item;
     };
 
@@ -97,7 +126,7 @@
         } finally {
             sendButton.disabled = false;
             input.disabled = false;
-            input.focus();
+            input.focus({ preventScroll: true });
         }
     };
 
